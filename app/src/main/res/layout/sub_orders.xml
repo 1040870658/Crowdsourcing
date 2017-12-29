@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+   android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+<ImageView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:src="@drawable/shop_back"
+    android:alpha="0.4"/>
+<LinearLayout
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/ll_new_orders"
+    >
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="New Orders"
+        android:layout_alignParentLeft="true"
+        android:background="@color/grey"
+        android:textSize="18sp"
+        />
+    <RelativeLayout
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:id="@+id/rl_click">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="StarBucks: Mocha"
+        android:layout_alignParentLeft="true"
+        android:textSize="15sp"
+        android:id="@+id/tv_item"/>
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/eyes"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="10dp"/>
+    </RelativeLayout>
+     <RelativeLayout
+         android:layout_below="@id/tv_item"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:background="@color/white">
+         <TextView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:text="Status:"
+             android:id="@+id/tv_status"
+             />
+         <TextView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:textColor="@color/green"
+             android:text="picked"
+             android:layout_toRightOf="@id/tv_status"/>
+         <TextView
+             android:layout_centerHorizontal="true"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:text="Arrival time: "
+             android:id="@+id/tv_time"/>
+         <TextView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_toRightOf="@id/tv_time"
+             android:text="30mins"
+             android:textColor="@color/green"/>
+
+     </RelativeLayout>
+    <RelativeLayout
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="7-Eleven: Beer"
+            android:layout_alignParentLeft="true"
+            android:textSize="15sp"
+            android:id="@+id/tv_item_7"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/eyes"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"/>
+    </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_below="@id/tv_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status:"
+                android:id="@+id/tv_status_2"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/red"
+                android:text="waiting"
+                android:layout_toRightOf="@id/tv_status_2"/>
+            <TextView
+                android:layout_centerHorizontal="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Waited for: "
+                android:id="@+id/tv_time_2"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/tv_time_2"
+                android:text="3mins"
+                android:textColor="@color/red"/>
+
+        </RelativeLayout>
+
+</LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll_new_orders"
+        >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Finished Orders"
+            android:layout_alignParentLeft="true"
+            android:background="@color/grey"
+            android:textSize="18sp"
+            />
+        <RelativeLayout
+            android:layout_marginTop="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Wellcome: screwdriver"
+                android:layout_alignParentLeft="true"
+                android:textSize="15sp"
+                android:id="@+id/tv_f_item_1"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/eyes"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="10dp"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_below="@id/tv_f_item_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status:"
+                android:id="@+id/tv_f_status_1"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/green"
+                android:text="completed"
+                android:layout_toRightOf="@id/tv_f_status_1"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+</RelativeLayout>

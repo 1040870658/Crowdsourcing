@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+    <ImageView
+        android:padding="@dimen/small_h_gap"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:id="@+id/iv_dselector"
+        android:src="@drawable/seven_11"
+        />
+    <TextView
+        android:drawableLeft="@drawable/ic_goods"
+        android:maxLines="1"
+        android:layout_marginLeft="@dimen/small_v_gap"
+        android:text="placeholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_dselector_order"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@id/iv_dselector"/>
+    <TextView
+        android:layout_marginLeft="@dimen/small_v_gap"
+        android:text="placeholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_selector_money"
+        android:layout_centerVertical="true"
+        android:drawableLeft="@drawable/ic_money"
+        android:layout_toRightOf="@id/iv_dselector"/>
+    <TextView
+        android:layout_marginLeft="@dimen/small_v_gap"
+        android:text="placehodler"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_location"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@id/iv_dselector"
+        android:id="@+id/tv_distance"
+        android:maxLines="1"
+        />
+    <Button
+        android:layout_width="60dp"
+        android:id="@+id/btn_pick"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:text="Pick"
+        android:textSize="15sp"
+        android:background="@color/orange"
+        android:textColor="@color/white" />
+</RelativeLayout>

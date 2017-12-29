@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.2"
+        android:id="@+id/iv_service_back"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+    <android.support.v4.view.ViewPager
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:id="@+id/vp_adv"
+        android:layout_alignParentTop="true">
+
+    </android.support.v4.view.ViewPager>
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/small_v_gap"
+        android:layout_centerInParent="true"
+        android:layout_height="wrap_content"
+        android:id="@+id/rcv_shops">
+
+    </android.support.v7.widget.RecyclerView>
+    </LinearLayout>
+</RelativeLayout>

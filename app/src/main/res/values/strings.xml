@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">CrowdSourcing</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="fake_name">crowd_sourcing</string>
+    <string name="tabs_m1">Pick packages</string>
+    <string name="tabs_m2">Shops</string>
+    <string name="tabs_m3">Orders</string>
+    <string name="tabs_m4">Tasks</string>
+    <string name="comment">评论</string>
+    <string name="API_KEY">AIzaSyCjfLvzS4F4EvJMl_rSTpfij6wrSbWnuDA</string>
+</resources>

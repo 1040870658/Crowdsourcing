@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="small_h_gap">4dp</dimen>
+    <dimen name="small_v_gap">10dp</dimen>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="tab_size">12dp</dimen>
+    <dimen name="padding_left">8dp</dimen>
+    <dimen name="comment_text_size">9sp</dimen>
+    <dimen name="head_text_size">15sp</dimen>
+    <dimen name="summary_text_size">12sp</dimen>
+    <dimen name="navigation_size">25dp</dimen>
+    <dimen name="tab">20dp</dimen>
+    <dimen name="order_list">50dp</dimen>
+</resources>
