@@ -7,6 +7,9 @@ import android.os.Parcelable;
  * Created by yechen on 2017/12/18.
  */
 
+/**
+ * CommodityModel is for presenting the data of item sale by shops*
+ */
 public class CommodityModel implements Parcelable {
 
     private String name;
@@ -18,7 +21,11 @@ public class CommodityModel implements Parcelable {
         this.price = price;
         this.imgID = imgID;
     }
-
+    public CommodityModel(String name, double price, String imgURL) {
+        this.name = name;
+        this.price = price;
+        this.imgURL = imgURL;
+    }
     public String getName() {
         return name;
     }

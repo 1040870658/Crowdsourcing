@@ -98,6 +98,7 @@ public class HoverListDecorator extends RecyclerView.ItemDecoration {
                 c.drawRect(parent.getPaddingLeft(),view.getTop() - DecoratorModel.NORMAL_HEIGHT ,
                         parent.getRight() - parent.getPaddingRight(), view.getTop(), mPaint);
                 mPaint.setColor(decoratorModel.getGroupTextColor().get(group));
+                mPaint.setTextSize(40);
                 c.drawText(decoratorModel.getGroupText().get(group),
                         parent.getPaddingLeft() + DecoratorModel.PADDING_LEFT, view.getTop() - DecoratorModel.TEXT_TOP, mPaint);
             }

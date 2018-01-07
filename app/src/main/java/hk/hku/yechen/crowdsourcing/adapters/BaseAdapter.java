@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -20,7 +21,9 @@ import java.util.List;
  */
 
 public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter.GeneralViewHolder> {
-    private List<T> datas;
+    protected List<T> datas;
+
+    public BaseAdapter(){datas = new ArrayList<>();}
 
     public BaseAdapter(List<T> datas){
         this.datas = datas;
@@ -54,6 +57,10 @@ public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter.Ge
 
         public void setListener(View.OnClickListener listener){
             contentView.setOnClickListener(listener);
+        }
+        public void setChildListener(View.OnClickListener listener,int id){
+            View view = getView(id);
+            view.setOnClickListener(listener);
         }
         public static GeneralViewHolder getInstance(ViewGroup parent,int id){
             View view = LayoutInflater.from(parent.getContext()).inflate(id,parent,false);

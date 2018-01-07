@@ -1,6 +1,8 @@
 package hk.hku.yechen.crowdsourcing.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -22,6 +24,7 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
+import hk.hku.yechen.crowdsourcing.MainActivity;
 import hk.hku.yechen.crowdsourcing.R;
 import hk.hku.yechen.crowdsourcing.ShopActivity;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
@@ -43,6 +46,10 @@ public class FragmentService extends Fragment {
     private List descriptions = new ArrayList();
     private List<Object[]> shopDatas = new ArrayList();
     private List<View> adViews;
+    String originLatLng;
+    String destinationLatLng;
+    String originAddress;
+    String destinationAddress;
     private final int[] resources = {R.drawable.mcdonald,
             R.drawable.seven_11,
             R.drawable.starbucks,
@@ -78,6 +85,7 @@ public class FragmentService extends Fragment {
             contentView = inflater.inflate(R.layout.shop_layout,container,false);
             imageView = (ImageView) contentView.findViewById(R.id.iv_service_back);
             imageView.setImageResource(R.drawable.shop_back);
+            readUserInfo();
             initAdvList(contentView);
             initShopList(contentView);
         }
@@ -111,7 +119,7 @@ public class FragmentService extends Fragment {
             public void convert(Object[] data, GeneralViewHolder viewHolder, int position) {
                 viewHolder.setImageView(R.id.iv_shop, (Drawable)data[0]);
                 viewHolder.setTextView(R.id.tv_description, (String) data[1]);
-                viewHolder.setListener(enterShop);
+                viewHolder.setListener(new ShopListener((String)data[1],resources[position]));
             }
         };
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -171,5 +179,32 @@ public class FragmentService extends Fragment {
         ImageView imageView = (ImageView) view.findViewById(R.id.iv_ad);
         Glide.with(getActivity()).load(pic).into(imageView);
         adViews.add(view);
+    }
+    private class ShopListener implements View.OnClickListener {
+
+        private String name;
+        private int backgroundID;
+        public ShopListener(String name,int backgroundID){
+            this.name = name;
+            this.backgroundID = backgroundID;
+        }
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(getActivity(), ShopActivity.class);
+            intent.putExtra(ShopActivity.SHOPTITLE,name);
+            intent.putExtra(ShopActivity.BACKIMAGE,backgroundID);
+            intent.putExtra(ShopActivity.SHOPADD,originAddress);
+            intent.putExtra(ShopActivity.CUSTOMERADD,destinationAddress);
+            startActivity(intent);
+        }
+    }
+    private void readUserInfo(){
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.shared_table, Context.MODE_PRIVATE);
+        if(sharedPreferences == null)
+            return;
+        originLatLng = sharedPreferences.getString(MainActivity.shared_originLatLng,null);
+        destinationLatLng = sharedPreferences.getString(MainActivity.shared_desLatLng,null);
+        originAddress = sharedPreferences.getString(MainActivity.shared_originAddress,null);
+        destinationAddress = sharedPreferences.getString(MainActivity.shared_desAddress,null);
     }
 }

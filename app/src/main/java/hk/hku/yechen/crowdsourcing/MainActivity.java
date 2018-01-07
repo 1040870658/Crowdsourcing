@@ -3,12 +3,14 @@ package hk.hku.yechen.crowdsourcing;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TabWidget;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -70,6 +72,15 @@ public class MainActivity extends FragmentActivity {
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
     }
 
+    @Override
+    protected void onResume() {
+        int tabs = getIntent().getIntExtra("tabs",-1);
+        if(tabs != -1){
+            fragmentTabHost.setCurrentTab(tabs);
+        }
+        super.onResume();
+    }
+
     void customizeActionBar() {
 
         getActionBar().setDisplayHomeAsUpEnabled(false);
@@ -88,5 +99,8 @@ public class MainActivity extends FragmentActivity {
         else{
             drawerLayout.openDrawer(drawerSetting);
         }
+    }
+    public FragmentTabHost getFragmentTabHost(){
+       return fragmentTabHost;
     }
 }

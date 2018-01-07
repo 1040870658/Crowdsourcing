@@ -12,6 +12,10 @@ import hk.hku.yechen.crowdsourcing.R;
  * Created by yechen on 2017/12/27.
  */
 
+/**
+ * DecoratorModel is a essential part of the hover recyclerView
+ */
+
 public class DecoratorModel {
     private int groupNum = 2;
     private List<Integer> groupPositions;
@@ -114,7 +118,7 @@ public class DecoratorModel {
                 //groupPositions[i] = 6;
             }
             groupColor.add(resources.getColor(R.color.light_gray));
-            groupTextColor.add(Color.BLACK);
+            groupTextColor.add(resources.getColor(R.color.orange));
         }
     }
     public DecoratorModel(Resources resources, List<List> datas, List<String> groupText ){

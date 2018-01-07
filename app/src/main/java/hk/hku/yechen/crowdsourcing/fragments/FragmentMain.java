@@ -13,6 +13,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTabHost;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -24,6 +25,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
+import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -106,6 +108,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     String originAddress;
     String destinationAddress;
     ArrayList<MarkerOptions> wayPointsMarkers;
+    MarkerOptions originMarker;
+    MarkerOptions desMarker;
     int orange;
     int green;
     int polyWidth = 5;
@@ -126,7 +130,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if(contentView == null) {
-            contentView = inflater.inflate(R.layout.activity_maps, null);
+            contentView = inflater.inflate(R.layout.activity_maps, container,false);
+
             displayMetrics = getResources().getDisplayMetrics();
             orange = getResources().getColor(R.color.orange);
             green = getResources().getColor(R.color.green);
@@ -137,6 +142,9 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             directPoly = new PolylineOptions();
             directPoly.color(green);
             directPoly.width(polyWidth);
+            originMarker = new MarkerOptions();
+            desMarker = new MarkerOptions();
+            desMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
             recommendIPresenter = new RecommendPresenter(this,polylineOptions);
             datas = new ArrayList<>();
 //          recommendIPresenter.recommend();
@@ -202,6 +210,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             placeSelectionListener = oPlaceSelectionListener;
             recommendIPresenter.initialMap(datas);
         }
+        searchFragment.onCreateView(inflater,container,null);
         return contentView;
     }
 
@@ -236,16 +245,21 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             String[] strings = originLatLng.split(",");
             double latD = Double.valueOf(strings[0]);
             double lngD = Double.valueOf(strings[1]);
-            directPoly.add(new LatLng(latD,lngD));
+            LatLng latLng = new LatLng(latD,lngD);
+            directPoly.add(latLng);
+            originMarker.position(latLng);
             strings = destinationLatLng.split(",");
             latD = Double.valueOf(strings[0]);
             lngD = Double.valueOf(strings[1]);
-            directPoly.add(new LatLng(latD,lngD));
+            latLng = new LatLng(latD,lngD);
+            directPoly.add(latLng);
+            desMarker.position(latLng);
             mMap.addPolyline(directPoly);
+            mMap.addMarker(originMarker);
+            mMap.addMarker(desMarker);
             zoomMap(directPoly);
         }
         else {
-//        mMap.addPolyline(polylineOptions);
 
             LatLng hk = new LatLng(22.2829989, 114.13708480000001);
             zoomMap(polylineOptions);
@@ -310,12 +324,11 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
                 LatLng s = directPoly.getPoints().get(0);
                 LatLng e = directPoly.getPoints().get(directPoly.getPoints().size() - 1);
 
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.position(s);
-                mMap.addMarker(markerOptions);
-                markerOptions = new MarkerOptions();
-                markerOptions.position(e);
-                mMap.addMarker(markerOptions);
+                originMarker = new MarkerOptions();
+                originMarker.position(s);
+                mMap.addMarker(originMarker);
+                desMarker.position(e);
+                mMap.addMarker(desMarker);
                 mMap.addPolyline(directPoly);
             }
 
@@ -505,6 +518,14 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
             @Override
             public void convert(final DestinationModel data, BaseAdapter.GeneralViewHolder viewHolder, final int position) {
+                viewHolder.setChildListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        MainActivity activity = (MainActivity)getActivity();
+                        activity.getFragmentTabHost().setCurrentTab(3);
+                        popupWindow.dismiss();
+                    }
+                },R.id.btn_pick);
                 viewHolder.setListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -536,9 +557,9 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
                             directPoly.width(polyWidth);
                             networkPresenter = new NetworkPresenter (ResponseExtractor.E_SUCCESS,NetworkPresenter.UrlBuilder.buildRoute(originLatLng,
                                  destinationLatLng,
-                                 "walking",des.latitude + "%2C"
-                                         + des.longitude + "%7C"+
-                                         origin.latitude + "%2C" + origin.longitude)
+                                 "walking",origin.latitude + "%2C"
+                                         + origin.longitude + "%7C"+
+                                         des.latitude + "%2C" + des.longitude)
                                  ,null,handler, ResponseExtractor.BuildRouteExtractor(polylineOptions,handler));
                             wayPointsMarkers.get(0).position(new LatLng(origin.latitude,origin.longitude))
                                     .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));

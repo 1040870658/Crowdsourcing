@@ -14,8 +14,26 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/ib_buy"
+        android:id="@+id/ib_minus"
         android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:background="#00000000"
+        android:src="@drawable/btn_minus"/>
+    <TextView
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:layout_toLeftOf="@id/ib_minus"
+        android:id="@+id/tv_buy"
+        android:text="0"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        />
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ib_buy"
+        android:layout_toLeftOf="@id/tv_buy"
         android:layout_centerVertical="true"
         android:background="#00000000"
         android:src="@drawable/selector_addbutton"/>

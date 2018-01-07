@@ -33,11 +33,11 @@ public class DestinationModel implements Parcelable {
     protected DestinationModel(Parcel in) {
         this.timeCost = in.readLong();
         in.readDoubleArray(this.pricesEarn);
-        this.itemModel = in.readParcelable(ItemModel.class.getClassLoader());
         this.name = in.readString();
         this.address = in.readString();
         this.images = in.readString();
         this.distance = in.readString();
+        this.itemModel = new ItemModel(in);
     }
     public ItemModel getItem(){
         return itemModel;
@@ -53,11 +53,11 @@ public class DestinationModel implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(timeCost);
         dest.writeDoubleArray(pricesEarn);
-        dest.writeParcelable(itemModel,Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
         dest.writeString(name);
         dest.writeString(address);
         dest.writeString(images);
         dest.writeString(distance);
+        itemModel.writeToParcel(dest,flags);
     }
 
     @Override

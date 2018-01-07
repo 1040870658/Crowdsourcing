@@ -1,7 +1,9 @@
 package hk.hku.yechen.crowdsourcing.model;
 
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.RequiresApi;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -9,6 +11,9 @@ import com.google.android.gms.maps.model.LatLng;
  * Created by yechen on 2017/11/23.
  */
 
+/**
+ * ItemModel is for an order which consists of commodity
+ */
 public class ItemModel implements Parcelable{
     private double startLat;
     private double startLng;
@@ -17,11 +22,11 @@ public class ItemModel implements Parcelable{
     private LatLng start;
     private LatLng end;
     private int id;
-    private String name;
+    private CommodityModel commodityModel;
 
     protected ItemModel(Parcel in) {
         this.id = in.readInt();
-        this.name = in.readString();
+        this.commodityModel = new CommodityModel(in);
         this.startLat = in.readDouble();
         this.startLng = in.readDouble();
         this.endLat = in.readDouble();
@@ -36,9 +41,9 @@ public class ItemModel implements Parcelable{
     public LatLng getEnd(){
         return end;
     }
-    public ItemModel(int id, String name,LatLng start,LatLng end) {
+    public ItemModel(int id, CommodityModel commodityModel,LatLng start,LatLng end) {
         this.id = id;
-        this.name = name;
+        this.commodityModel = commodityModel;
         this.start = start;
         this.end = end;
         this.startLng = start.longitude;
@@ -67,7 +72,7 @@ public class ItemModel implements Parcelable{
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(id);
-        dest.writeString(name);
+        commodityModel.writeToParcel(dest,flags);
         dest.writeDouble(startLat);
         dest.writeDouble(startLng);
         dest.writeDouble(endLat);

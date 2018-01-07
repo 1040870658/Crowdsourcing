@@ -8,6 +8,9 @@
     <string name="tabs_m2">Shops</string>
     <string name="tabs_m3">Orders</string>
     <string name="tabs_m4">Tasks</string>
-    <string name="comment">评论</string>
+    <string name="task_title_1">Task In Process</string>
+    <string name="task_title_2">Task Finished</string>
+    <string name="order_title_1">Orders In Process</string>
+    <string name="order_title_2">Orders Finished</string>
     <string name="API_KEY">AIzaSyCjfLvzS4F4EvJMl_rSTpfij6wrSbWnuDA</string>
 </resources>
