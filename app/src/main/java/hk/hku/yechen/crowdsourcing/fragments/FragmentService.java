@@ -84,7 +84,7 @@ public class FragmentService extends Fragment {
         if(contentView == null){
             contentView = inflater.inflate(R.layout.shop_layout,container,false);
             imageView = (ImageView) contentView.findViewById(R.id.iv_service_back);
-            imageView.setImageResource(R.drawable.shop_back);
+            Glide.with(getActivity()).load(R.drawable.back_shop).into(imageView);
             readUserInfo();
             initAdvList(contentView);
             initShopList(contentView);
@@ -195,6 +195,16 @@ public class FragmentService extends Fragment {
             intent.putExtra(ShopActivity.BACKIMAGE,backgroundID);
             intent.putExtra(ShopActivity.SHOPADD,originAddress);
             intent.putExtra(ShopActivity.CUSTOMERADD,destinationAddress);
+            String[] strings = originLatLng.split(",");
+            double latD = Double.valueOf(strings[0]);
+            double lngD = Double.valueOf(strings[1]);
+            intent.putExtra(ShopActivity.SHOPLAT,latD);
+            intent.putExtra(ShopActivity.SHOPLNG,lngD);
+            strings = destinationLatLng.split(",");
+            latD = Double.valueOf(strings[0]);
+            lngD = Double.valueOf(strings[1]);
+            intent.putExtra(ShopActivity.CUSLAT,latD);
+            intent.putExtra(ShopActivity.CUSLNG,lngD);
             startActivity(intent);
         }
     }

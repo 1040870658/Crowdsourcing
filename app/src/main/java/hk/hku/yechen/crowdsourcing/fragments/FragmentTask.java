@@ -14,9 +14,7 @@ import java.util.List;
 
 import hk.hku.yechen.crowdsourcing.R;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
-import hk.hku.yechen.crowdsourcing.adapters.GroupAdapter;
 import hk.hku.yechen.crowdsourcing.adapters.TaskAdapter;
-import hk.hku.yechen.crowdsourcing.model.ItemModel;
 import hk.hku.yechen.crowdsourcing.util.HoverListDecorator;
 
 /**

@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:textAlignment="center"
         android:layout_toLeftOf="@id/ib_minus"
-        android:id="@+id/tv_buy"
+        android:id="@+id/tv_item_num"
         android:text="0"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
@@ -32,8 +32,8 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/ib_buy"
-        android:layout_toLeftOf="@id/tv_buy"
+        android:id="@+id/ib_add"
+        android:layout_toLeftOf="@id/tv_item_num"
         android:layout_centerVertical="true"
         android:background="#00000000"
         android:src="@drawable/selector_addbutton"/>
@@ -52,4 +52,13 @@
         android:textSize="18sp"
         android:id="@+id/tv_price"
         />
+    <TextView
+        android:layout_marginLeft="30dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/tv_price"
+        android:textColor="@color/orange"
+        android:textSize="16sp"
+        android:id="@+id/tv_stock"
+        android:layout_alignParentBottom="true"/>
 </RelativeLayout>

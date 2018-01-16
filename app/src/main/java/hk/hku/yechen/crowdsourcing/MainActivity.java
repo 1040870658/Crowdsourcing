@@ -1,5 +1,6 @@
 package hk.hku.yechen.crowdsourcing;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
@@ -21,6 +22,7 @@ import hk.hku.yechen.crowdsourcing.fragments.FragmentOrders;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentService;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentTask;
 import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
+import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 /**
  * Created by yechen on 2017/11/20.
@@ -29,6 +31,7 @@ import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
 public class MainActivity extends FragmentActivity {
 
     public ExecutorService executorService = Executors.newCachedThreadPool();
+    public ExecutorService fixService = Executors.newFixedThreadPool(2);
     private FragmentTabHost fragmentTabHost;
     private DrawerLayout drawerLayout;
     private RelativeLayout drawerSetting;
@@ -41,6 +44,9 @@ public class MainActivity extends FragmentActivity {
     public static final String shared_originAddress = "originAddress";
     public static final String shared_desAddress = "desAddress";
 
+    public ExecutorService getFixService(){
+        return fixService;
+    }
     private int tabs[]={
             R.layout.tablayout_m1,
             R.layout.tablayout_m2,
@@ -74,11 +80,17 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onResume() {
+        super.onResume();
         int tabs = getIntent().getIntExtra("tabs",-1);
         if(tabs != -1){
             fragmentTabHost.setCurrentTab(tabs);
         }
-        super.onResume();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
     }
 
     void customizeActionBar() {

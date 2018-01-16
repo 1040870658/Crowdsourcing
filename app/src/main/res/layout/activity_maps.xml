@@ -16,6 +16,25 @@
         android:clickable="true"
         android:src="@drawable/selector_popbutton"
         android:id="@+id/ll_pop"/>
+    <TextView
+        android:layout_marginRight="@dimen/small_h_gap"
+        android:layout_width="105dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="  original path"
+        android:background="@color/white"
+        android:id="@+id/tv_guide_origin_path"
+        android:drawableLeft="@drawable/icon_green"/>
+    <TextView
+        android:layout_marginRight="@dimen/small_h_gap"
+        android:layout_width="105dp"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/icon_orange"
+        android:text="  delivery path"
+        android:layout_above="@id/tv_guide_origin_path"
+        android:background="@color/white"
+        android:layout_alignParentLeft="true"/>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

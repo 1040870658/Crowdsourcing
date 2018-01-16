@@ -12,15 +12,18 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
-import hk.hku.yechen.crowdsourcing.util.LevelLog;
+import hk.hku.yechen.crowdsourcing.model.OrderModel;
 import hk.hku.yechen.crowdsourcing.util.SimpleItemDecorator;
 
 /**
@@ -32,30 +35,56 @@ public class ShopActivity extends Activity {
     private RecyclerView recyclerView;
     private BaseAdapter adapter;
     private ImageView backGround;
-    private Button button;
+    private Button launchButton;
     private TextView titleView;
+    private TextView priceView;
     private int imageSRC;
     private String shopTitle;
     private String shopADD;
     private String cusADD;
+    private double shopLat;
+    private double cusLat;
+    private double shopLng;
+    private double cusLng;
+    private double price;
+    private int itemNum = 0;
+    private HashMap<CommodityModel,Integer> commodities;
     public static final String BACKIMAGE = "IMAGEID";
     public static final String SHOPADD = "SHOPADD";
     public static final String CUSTOMERADD = "CUSTOMERADD";
     public static final String SHOPTITLE = "SHOPTITLE";
+    public static final String SHOPLAT = "SHOPLAT";
+    public static final String SHOPLNG = "SHOPLng";
+    public static final String CUSLAT = "CUSLAT";
+    public static final String CUSLNG = "CUSLNG";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.shop_activity_layout);
-        button = (Button) findViewById(R.id.btn_buy);
+        commodities = new HashMap<>();
+        launchButton = (Button) findViewById(R.id.btn_buy);
         titleView = (TextView) findViewById(R.id.tv_shop_title);
+        priceView = (TextView) findViewById(R.id.tv_order_price);
+        price = 0.0;
         getDataFromMain();
-        button.setOnClickListener(new View.OnClickListener() {
+        launchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(commodities.size() == 0){
+                    Toast.makeText(ShopActivity.this, "Oops,You didn't select anything", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                submit();
+                //TODO: trans orderModel to OrderActivity
+                OrderModel orderModel = new OrderModel(0,commodities,
+                        new LatLng(shopLat,shopLng),new LatLng(cusLat,cusLng),
+                        "香港大学西营盘大学图书馆大楼旧翼地下","香港大学图书馆");
+                orderModel.setPrice(price);
                 Intent intent = new Intent(ShopActivity.this,OrderActivity.class);
-                intent.putExtra(SHOPADD,shopADD);
-                intent.putExtra(CUSTOMERADD,cusADD);
+                intent.putExtra(OrderActivity.ORDER,orderModel);
+       //         intent.putExtra(SHOPADD,shopADD);
+       //         intent.putExtra(CUSTOMERADD,cusADD);
                 startActivity(intent);
             }
         });
@@ -77,10 +106,40 @@ public class ShopActivity extends Activity {
             }
 
             @Override
-            public void convert(CommodityModel data, GeneralViewHolder viewHolder, int position) {
+            public void convert(final CommodityModel data, final GeneralViewHolder viewHolder, int position) {
                 viewHolder.setTextView(R.id.tv_item_name,data.getName());
                 viewHolder.setTextView(R.id.tv_price,"$"+data.getPrice());
                 viewHolder.setImageView(ShopActivity.this,R.id.iv_item_pic,data.getImgID());
+                final TextView itemNumTextView = viewHolder.getView(R.id.tv_item_num);
+                final int limit = data.getAvaNum();
+                viewHolder.setTextView(R.id.tv_stock,"Stock: "+String.valueOf(limit));
+                viewHolder.setChildListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        itemNum = Integer.valueOf(itemNumTextView.getText().toString());
+                        if(itemNum < limit) {
+                            itemNum++;
+                            itemNumTextView.setText(String.valueOf(itemNum));
+                            commodities.put(data,itemNum);
+                            price += data.getPrice();
+                            priceView.setText("$"+price);
+                        }
+                    }
+                },R.id.ib_add);
+                viewHolder.setChildListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int limit = 0;
+                        itemNum = Integer.valueOf(itemNumTextView.getText().toString());
+                        if(itemNum > limit) {
+                            itemNum --;
+                            itemNumTextView.setText(String.valueOf(itemNum));
+                            commodities.put(data,itemNum);
+                            price -= data.getPrice();
+                            priceView.setText("$"+price);
+                        }
+                    }
+                },R.id.ib_minus);
             }
         };
         recyclerView = (RecyclerView) findViewById(R.id.rcv_commodity_list);
@@ -90,18 +149,18 @@ public class ShopActivity extends Activity {
     }
     private void getData(String shopID){
         datas = new ArrayList<>();
-        datas.add(new CommodityModel("American Blueberry Scone",50,R.drawable.american_blueberry_scone));
-        datas.add(new CommodityModel("Chicken Mushroom Pie",40,R.drawable.chicken_mushroom_pie));
-        datas.add(new CommodityModel("Cinnamon Danish",30,R.drawable.cinnamon_danish));
-        datas.add(new CommodityModel("French Butter Croissant",35,R.drawable.croque_monsieuer));
-        datas.add(new CommodityModel("Sausage Roll",38,R.drawable.sausage_roll));
-        datas.add(new CommodityModel("Croque Monsieuer",42,R.drawable.french_butter_croissant));
-        datas.add(new CommodityModel("Mushroom Cheese Pocket",42,R.drawable.mushroom_cheese_pocket));
-        datas.add(new CommodityModel("Chicken Mushroom Pie",40,R.drawable.chicken_mushroom_pie));
-        datas.add(new CommodityModel("Cinnamon Danish",30,R.drawable.cinnamon_danish));
-        datas.add(new CommodityModel("French Butter Croissant",35,R.drawable.croque_monsieuer));
-        datas.add(new CommodityModel("Sausage Roll",38,R.drawable.sausage_roll));
-        datas.add(new CommodityModel("American Blueberry Scone",50,R.drawable.american_blueberry_scone));
+        datas.add(new CommodityModel("American Blueberry Scone",50,R.drawable.american_blueberry_scone,12));
+        datas.add(new CommodityModel("Chicken Mushroom Pie",40,R.drawable.chicken_mushroom_pie,20));
+        datas.add(new CommodityModel("Cinnamon Danish",30,R.drawable.cinnamon_danish,100));
+        datas.add(new CommodityModel("French Butter Croissant",35,R.drawable.croque_monsieuer,50));
+        datas.add(new CommodityModel("Sausage Roll",38,R.drawable.sausage_roll,32));
+        datas.add(new CommodityModel("Croque Monsieuer",42,R.drawable.french_butter_croissant,11));
+        datas.add(new CommodityModel("Mushroom Cheese Pocket",42,R.drawable.mushroom_cheese_pocket,16));
+        datas.add(new CommodityModel("Chicken Mushroom Pie",40,R.drawable.chicken_mushroom_pie,67));
+        datas.add(new CommodityModel("Cinnamon Danish",30,R.drawable.cinnamon_danish,33));
+        datas.add(new CommodityModel("French Butter Croissant",35,R.drawable.croque_monsieuer,76));
+        datas.add(new CommodityModel("Sausage Roll",38,R.drawable.sausage_roll,3));
+        datas.add(new CommodityModel("American Blueberry Scone",50,R.drawable.american_blueberry_scone,65));
     }
     void customizeActionBar() {
 
@@ -122,8 +181,15 @@ public class ShopActivity extends Activity {
         shopTitle = intent.getStringExtra(SHOPTITLE);
         shopADD = intent.getStringExtra(SHOPADD);
         cusADD = intent.getStringExtra(CUSTOMERADD);
+        shopLat = intent.getDoubleExtra(SHOPLAT,0.0);
+        shopLng = intent.getDoubleExtra(SHOPLNG,0.0);
+        cusLat = intent.getDoubleExtra(CUSLAT,0.0);
+        cusLng = intent.getDoubleExtra(CUSLNG,0.0);
     }
     public void GoBack(View view){
         finish();
     }
+
+    //TODO:request order from server
+    private void submit(){};
 }

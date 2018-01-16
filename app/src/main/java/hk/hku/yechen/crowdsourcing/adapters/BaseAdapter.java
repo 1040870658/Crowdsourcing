@@ -15,6 +15,8 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
+import hk.hku.yechen.crowdsourcing.util.LevelLog;
+
 
 /**
  * Created by yechen on 2017/11/23.
@@ -35,7 +37,7 @@ public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter.Ge
 
     @Override
     public void onBindViewHolder(GeneralViewHolder holder, int position) {
-        convert(datas.get(position),(GeneralViewHolder)holder,position);
+        convert(datas.get(position),holder,position);
     }
 
     @Override
@@ -60,7 +62,8 @@ public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter.Ge
         }
         public void setChildListener(View.OnClickListener listener,int id){
             View view = getView(id);
-            view.setOnClickListener(listener);
+            if(view != null)
+                view.setOnClickListener(listener);
         }
         public static GeneralViewHolder getInstance(ViewGroup parent,int id){
             View view = LayoutInflater.from(parent.getContext()).inflate(id,parent,false);

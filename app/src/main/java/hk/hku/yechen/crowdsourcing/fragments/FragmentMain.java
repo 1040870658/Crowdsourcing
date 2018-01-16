@@ -2,6 +2,7 @@ package hk.hku.yechen.crowdsourcing.fragments;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -54,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hk.hku.yechen.crowdsourcing.MainActivity;
+import hk.hku.yechen.crowdsourcing.OrderDetailActivity;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.model.DestinationModel;
 import hk.hku.yechen.crowdsourcing.myviews.RecommendView;
@@ -144,11 +146,11 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             directPoly.width(polyWidth);
             originMarker = new MarkerOptions();
             desMarker = new MarkerOptions();
-            desMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+            desMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             recommendIPresenter = new RecommendPresenter(this,polylineOptions);
             datas = new ArrayList<>();
 //          recommendIPresenter.recommend();
-            popView = (View) contentView.findViewById(R.id.ll_pop);
+            popView = contentView.findViewById(R.id.ll_pop);
             popView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -206,6 +208,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
                 }
             };
+
             cancelSearch.setVisibility(View.GONE);
             placeSelectionListener = oPlaceSelectionListener;
             recommendIPresenter.initialMap(datas);
@@ -234,6 +237,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     }
     @Override
     public void onResume() {
+        popupWindow.showAtLocation(contentView, Gravity.BOTTOM|Gravity.CENTER,0,0);
         super.onResume();
     }
 
@@ -254,7 +258,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             latLng = new LatLng(latD,lngD);
             directPoly.add(latLng);
             desMarker.position(latLng);
-            mMap.addPolyline(directPoly);
+     //       mMap.addPolyline(directPoly);
             mMap.addMarker(originMarker);
             mMap.addMarker(desMarker);
             zoomMap(directPoly);
@@ -500,6 +504,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     @Override
     public void onDestroyView() {
         writeUserInfo(originLatLng,destinationLatLng,originAddress,destinationAddress);
+        popupWindow.dismiss();
         super.onDestroyView();
     }
 
@@ -518,14 +523,18 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
             @Override
             public void convert(final DestinationModel data, BaseAdapter.GeneralViewHolder viewHolder, final int position) {
+                viewHolder.setImageView(getActivity(),R.id.iv_dselector,data.getImageID());
+                viewHolder.setTextView(R.id.tv_selector_shopadd,data.getOrderModel().getShopAdd());
+                viewHolder.setTextView(R.id.tv_dselector_money,"$"+String.valueOf(data.getPricesEarn()[0]));
+                viewHolder.setTextView(R.id.tv_dselector_cusadd,data.getOrderModel().getTargetAdd());
                 viewHolder.setChildListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        MainActivity activity = (MainActivity)getActivity();
-                        activity.getFragmentTabHost().setCurrentTab(3);
                         popupWindow.dismiss();
+                        Intent intent = new Intent(getActivity(), OrderDetailActivity.class);
+                        startActivity(intent);
                     }
-                },R.id.btn_pick);
+                },R.id.btn_detail);
                 viewHolder.setListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -564,7 +573,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
                             wayPointsMarkers.get(0).position(new LatLng(origin.latitude,origin.longitude))
                                     .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
                             wayPointsMarkers.get(1).position(new LatLng(des.latitude,des.longitude))
-                                    .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                                    .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
                             directPresenter = new NetworkPresenter(ResponseExtractor.D_SUCCESS,
                                     NetworkPresenter.UrlBuilder.buildRoute(
                                             originLatLng,destinationLatLng,

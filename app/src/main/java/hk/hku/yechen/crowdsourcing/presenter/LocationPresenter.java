@@ -97,7 +97,7 @@ public class LocationPresenter {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             LevelLog.log(LevelLog.ERROR,"Location Presenter","Gps Enabled");
-            if(checkPermission(context) == false){
+            if(!checkPermission(context)){
                 return null;
             };
             Location location = mMap.getMyLocation();

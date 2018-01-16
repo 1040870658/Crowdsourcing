@@ -1,7 +1,6 @@
 package hk.hku.yechen.crowdsourcing.model;
 
 import android.content.res.Resources;
-import android.graphics.Color;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,7 +116,7 @@ public class DecoratorModel {
                 groupPositions.add(totalPos);
                 //groupPositions[i] = 6;
             }
-            groupColor.add(resources.getColor(R.color.light_gray));
+            groupColor.add(resources.getColor(R.color.light_grey));
             groupTextColor.add(resources.getColor(R.color.orange));
         }
     }

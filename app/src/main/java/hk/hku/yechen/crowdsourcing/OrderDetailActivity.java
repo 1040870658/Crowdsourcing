@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -16,60 +14,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.model.OrderModel;
-import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 /**
- * Created by yechen on 2017/12/21.
+ * Created by yechen on 2018/1/9.
  */
 
-public class OrderActivity extends Activity {
-    public static final String ORDER = "ORDER_DETAIL";
+public class OrderDetailActivity extends Activity {
+    public static final String ORDER_AUG = "OrderDetail";
     private TextView addressText;
-    private TextView priceText;
     private String address= "";
-    private Button payButton;
-    private String shopADD;
-    private String cusADD;
-    private TextView shopAddressView;
+    private Button backButton;
     private OrderModel orderModel;
-    private RecyclerView recyclerView;
-    List<CommodityModel> description;
+    private List<CommodityModel> description;
+    private TextView shopAddressView;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.order_confirm_layout);
+        setContentView(R.layout.order_confirm_general);
         customizeActionBar();
-        payButton = (Button) findViewById(R.id.btn_pay);
-        payButton.setOnClickListener(new PayListener());
-        addressText = (TextView) findViewById(R.id.tv_confirm_address);
-        priceText = (TextView) findViewById(R.id.tv_order_confirm_price);
-        addressText.setOnClickListener(new View.OnClickListener() {
+        backButton = (Button) findViewById(R.id.btn_throw);
+        shopAddressView = (TextView) findViewById(R.id.tv_confirm_shop);
+        backButton.setOnClickListener(new View.OnClickListener(){
+
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(OrderActivity.this,MapsActivity.class);
-                startActivityForResult(intent,16);
+                finish();
             }
         });
-        shopAddressView = (TextView) findViewById(R.id.tv_confirm_shop);
-        recyclerView = (RecyclerView) findViewById(R.id.rcv_order_confirm);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         getDataFromShop();
-        recyclerView.setAdapter(new BaseAdapter<CommodityModel>(description) {
-            @Override
-            public int getLayoutId(int viewType) {
-                return R.layout.order_description;
-            }
-
-            @Override
-            public void convert(CommodityModel data, GeneralViewHolder viewHolder, int position) {
-                viewHolder.setTextView(R.id.tv_order_description,data.getName());
-                viewHolder.setTextView(R.id.tv_order_description_number,"x"+orderModel.getCommodityMap().get(data));
-            }
-
-        });
     }
 
     @Override
@@ -80,6 +54,8 @@ public class OrderActivity extends Activity {
     }
 
     void customizeActionBar() {
+        if(getActionBar() == null)
+            return;
 
         getActionBar().setDisplayHomeAsUpEnabled(false);
         getActionBar().setHomeButtonEnabled(true);
@@ -93,12 +69,12 @@ public class OrderActivity extends Activity {
     public void GoBack(View view){
         finish();
     }
-    private class PayListener implements View.OnClickListener{
+    private class PickListener implements View.OnClickListener{
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(OrderActivity.this,MainActivity.class);
-            intent.putExtra("tabs",2);
+            Intent intent = new Intent(OrderDetailActivity.this,MainActivity.class);
+            intent.putExtra("tabs",3);
             startActivity(intent);
             finish();
         }
@@ -108,11 +84,10 @@ public class OrderActivity extends Activity {
         if(intent == null) {
             return;
         }
-        orderModel = getIntent().getParcelableExtra(ORDER);
+        orderModel = getIntent().getParcelableExtra(OrderActivity.ORDER);
         if(orderModel != null){
             shopAddressView.setText(orderModel.getShopAdd());
             addressText.setText(orderModel.getTargetAdd());
-            priceText.setText("$"+orderModel.getPrice());
             description = new ArrayList<>();
             CommodityModel tmp;
             HashMap<CommodityModel,Integer> commodityMap = orderModel.getCommodityMap();

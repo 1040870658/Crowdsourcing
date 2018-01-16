@@ -4,39 +4,50 @@
     android:layout_height="wrap_content"
     android:id="@+id/ll_new_orders"
     >
-    <RelativeLayout
+    <LinearLayout
         android:layout_marginTop="5dp"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white">
-        <ImageView
-            android:layout_width="wrap_content"
+        <ImageButton
+            android:background="@color/transparent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/location"
+            android:src="@drawable/icon_stage_processing"
             android:layout_alignParentLeft="true"
-            android:id="@+id/iv_shop_location"
+            android:id="@+id/ib_shop_location"
+            android:layout_weight="0.3"
             />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Main Library, 94 Bonham Rd, Sai Wan"
-            android:textSize="15sp"
-            android:layout_toRightOf="@id/iv_shop_location"
-            android:id="@+id/tv_item"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alex"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="5dp"
-            android:id="@+id/tv_name"/>
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="3dp"
+            android:layout_weight="1"
+            android:src="@color/orange"
+            android:id="@+id/iv_shop_in_process"
+            android:layout_gravity="center_vertical"/>
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_weight="0.3"
             android:layout_height="wrap_content"
-            android:src="@drawable/phone"
-            android:layout_marginRight="10dp"
-            android:layout_toLeftOf="@id/tv_name"/>
-    </RelativeLayout>
+            android:background="@color/transparent"
+            android:src="@drawable/icon_stage_waiting"
+            android:id="@+id/ib_target_location"/>
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="3dp"
+            android:layout_weight="1"
+            android:src="@color/grey"
+            android:id="@+id/iv_target_in_process"
+            android:layout_gravity="center_vertical"/>
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_weight="0.3"
+            android:layout_height="wrap_content"
+            android:background="@color/transparent"
+            android:src="@drawable/icon_stage_waiting"
+            android:id="@+id/ib_des_location"/>
+    </LinearLayout>
     <RelativeLayout
         android:layout_below="@id/tv_item"
         android:layout_width="match_parent"
@@ -45,41 +56,38 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reward:"
-            android:id="@+id/tv_reward"
-            />
+            android:text="Jhceshop"
+            android:id="@+id/tv_process_shop"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alex"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="5dp"
+            android:id="@+id/tv_name"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/phone"
+            android:clickable="true"
+            android:id="@+id/iv_phone"
+            android:layout_marginRight="10dp"
+            android:layout_toLeftOf="@id/tv_name"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/green"
-            android:text="$8"
-            android:layout_toRightOf="@id/tv_reward"/>
-        <TextView
-            android:layout_centerHorizontal="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Time Cost: "
-            android:id="@+id/tv_cost"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/tv_cost"
-            android:text="6mins"
-            android:textColor="@color/green"/>
-
-        <TextView
-            android:layout_marginRight="5dp"
             android:layout_alignParentRight="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/tv_punish"
-            android:textColor="@color/red"
-            android:text="1h"/>
+            android:text="$8"
+            android:id="@+id/tv_reward"
+            android:layout_marginRight="@dimen/small_h_gap"
+            />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Punish Time:"
-            android:layout_toLeftOf="@id/tv_punish"/>
+            android:text="Reward:"
+            android:layout_toLeftOf="@id/tv_reward"
+            />
     </RelativeLayout>
 
 </LinearLayout>

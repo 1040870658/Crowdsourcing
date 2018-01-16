@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import hk.hku.yechen.crowdsourcing.model.DestinationModel;
 import hk.hku.yechen.crowdsourcing.util.Extractor;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
 import okhttp3.Response;
@@ -28,7 +29,7 @@ public class ResponseExtractor implements Extractor {
     public static final int E_Error = 0x00000012;
     private static Extractor extractor;
     private ResponseExtractor(){};
-    public static Extractor BuildRouteExtractor(PolylineOptions polylineOptions,Handler handler){
+    public static Extractor BuildRouteExtractor(PolylineOptions polylineOptions, Handler handler){
         extractor = new RouteExtractor(polylineOptions,handler);
         return extractor;
     }
@@ -118,8 +119,18 @@ public class ResponseExtractor implements Extractor {
                 LatLng latLng;
 
                 steps = new ArrayList<>();
+                JSONObject durationJson;
+                JSONObject distanceJson;
+                int timeConsuming = 0;
+                int distance = 0;
                 for(int i = 0;i <legs.length();i ++){
                     steps.add(legs.getJSONObject(i).getJSONArray("steps"));
+                    durationJson = legs.getJSONObject(i).getJSONObject("duration");
+                    distanceJson = legs.getJSONObject(i).getJSONObject("distance");
+                    if (durationJson != null)
+                        timeConsuming += durationJson.getInt("value");
+                    if(distanceJson != null)
+                        distance += distanceJson.getInt("value");
                 }
                 for(int j = 0;j < steps.size();j ++) {
                     stepsArray = steps.get(j);
@@ -134,9 +145,12 @@ public class ResponseExtractor implements Extractor {
                         latLng = new LatLng(endObject.getDouble("lat"), endObject.getDouble("lng"));
                         polylineOptions.add(latLng);
                     }
-                    handler.sendEmptyMessage(messageCode);
                 }
-
+                Message message = new Message();
+                message.arg1 = distance;
+                message.arg2 = timeConsuming;
+                message.what = messageCode;
+                handler.sendMessage(message);
                 //JSONObject leg = new JSONObject(routes.get("legs").toString());
                 //LevelLog.log(LevelLog.ERROR,"routes",routes.toString());
                 //LevelLog.log(LevelLog.ERROR,"routes",polylineOptions.toString());

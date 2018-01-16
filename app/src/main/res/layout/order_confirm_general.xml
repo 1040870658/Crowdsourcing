@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textAlignment="center"
-            android:text="Order Confirmation"
+            android:text="Order Detail"
             android:textSize="20sp"
             android:id="@+id/tv_shop_title"/>
     </LinearLayout>
@@ -39,9 +39,8 @@
             android:text="Order Description"
             />
         <android.support.v7.widget.RecyclerView
-            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="wrap_content"
             android:id="@+id/rcv_order_confirm"
             android:layout_below="@id/tv_order_confirm_title"/>
         <RelativeLayout
@@ -66,7 +65,7 @@
     </RelativeLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:orientation="horizontal"
         android:background="@color/white">
         <TextView
@@ -74,10 +73,10 @@
             android:layout_height="wrap_content"
             android:text="Customer Name"
             />
-        <EditText
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/et_order_confirm_name"
+            android:id="@+id/tv_order_confirm_name"
             android:layout_marginLeft="@dimen/small_v_gap"/>
     </LinearLayout>
     <View
@@ -93,10 +92,10 @@
             android:layout_height="wrap_content"
             android:text="Phone Number"
             />
-        <EditText
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/et_order_confirm_tel"
+            android:id="@+id/_order_confirm_tel"
             android:layout_marginLeft="@dimen/small_v_gap"/>
     </LinearLayout>
     <View
@@ -136,9 +135,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/tv_confirm_address"
             android:maxLines="2"
-            android:clickable="true"
+            android:textColor="@color/grey"
             android:layout_marginLeft="@dimen/small_v_gap"
-            android:drawableRight="@drawable/btn_foward"
             />
     </LinearLayout>
     <View
@@ -189,12 +187,13 @@
             android:textColor="@color/orange"
             android:id="@+id/tv_total_price"/>
         <Button
-            android:layout_width="80dp"
-            android:id="@+id/btn_pay"
+            android:layout_width="50dp"
             android:layout_height="32dp"
+            android:id="@+id/btn_throw"
+            android:textColor="@color/white"
             android:layout_alignParentRight="true"
-            android:text="Pay"
-            android:background="@color/orange"
-            android:textColor="@color/white" />
+            android:text="Back"
+            android:textSize="14sp"
+            android:background="@color/grey"/>
     </RelativeLayout>
 </LinearLayout>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/ll_new_orders"
+    >
+    <RelativeLayout
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="JHCeshop"
+            android:layout_alignParentLeft="true"
+            android:textSize="15sp"
+            android:id="@+id/tv_f_item_1"/>
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_below="@id/tv_f_item_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Earned:"
+            android:id="@+id/tv_f_status_1"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/green"
+            android:text="$11"
+            android:layout_toRightOf="@id/tv_f_status_1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Credit:"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/tv_credit"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/green"
+            android:text="2 points"
+            android:layout_toRightOf="@id/tv_credit"/>
+    </RelativeLayout>
+
+</LinearLayout>

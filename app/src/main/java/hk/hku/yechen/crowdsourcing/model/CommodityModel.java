@@ -15,17 +15,21 @@ public class CommodityModel implements Parcelable {
     private String name;
     private double price;
     private String imgURL;
+    private int avaNum;
 
-    public CommodityModel(String name, double price, int imgID) {
+    public CommodityModel(String name, double price, int imgID,int avaNum) {
         this.name = name;
         this.price = price;
         this.imgID = imgID;
+        this.avaNum = avaNum;
     }
-    public CommodityModel(String name, double price, String imgURL) {
+    public CommodityModel(String name, double price, String imgURL,int avaNum) {
         this.name = name;
         this.price = price;
         this.imgURL = imgURL;
+        this.avaNum = avaNum;
     }
+    public int getAvaNum(){ return  avaNum; }
     public String getName() {
         return name;
     }
@@ -50,6 +54,7 @@ public class CommodityModel implements Parcelable {
         this.price = in.readDouble();
         this.imgURL = in.readString();
         this.imgID = in.readInt();
+        this.avaNum = in.readInt();
     }
 
     public static final Creator<CommodityModel> CREATOR = new Creator<CommodityModel>() {
@@ -75,6 +80,7 @@ public class CommodityModel implements Parcelable {
         dest.writeDouble(price);
         dest.writeString(imgURL);
         dest.writeInt(imgID);
+        dest.writeInt(avaNum);
     }
 
 }
