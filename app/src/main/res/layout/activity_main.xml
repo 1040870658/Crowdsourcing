@@ -40,7 +40,7 @@
         android:layout_height="match_parent"
         android:id="@+id/main_drawer"
         android:orientation="vertical"
-        android:background="@color/yellow"
+        android:background="@color/light_grey"
         android:layout_gravity="end">
 
         <LinearLayout
@@ -51,26 +51,89 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:src="@drawable/kfc"
+                android:src="@drawable/title"
                 android:padding="20dp"
                 android:background="@color/white"
                 android:id="@+id/iv_drawerImage"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
+            <RelativeLayout
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:text="Koral"
+                    android:text="Edward"
                     android:background="@color/orange"
                     android:textColor="@color/white"
                     android:textSize="20sp"
+                    android:layout_alignParentTop="true"
                     android:id="@+id/tv_drawerName"/>
-
+                <LinearLayout
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_below="@id/tv_drawerName"
+                    android:id="@+id/ll_account">
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:textColor="@color/orange"
+                        android:id="@+id/tv_account"
+                        android:text="0.0"/>
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Account"
+                        android:id="@+id/tv_account_text"
+                        android:textColor="@color/grey"
+                        android:layout_below="@id/tv_account"
+                        />
+                </LinearLayout>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:id="@+id/iv_sep"
+                    android:src="@drawable/vertical_sep"
+                    android:layout_below="@id/tv_drawerName"
+                    android:layout_toRightOf="@id/ll_account"/>
+                <LinearLayout
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/iv_sep"
+                    android:layout_below="@id/tv_drawerName"
+                    android:orientation="vertical"
+                    android:id="@+id/ll_credit">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:textSize="20sp"
+                        android:textColor="@color/orange"
+                        android:id="@+id/tv_credit"
+                        android:text="0.0"/>
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Credit"
+                        android:textColor="@color/grey"
+                        />
+                </LinearLayout>
+                </RelativeLayout>
             </LinearLayout>
-        </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/grey"
+            android:id="@+id/tv_login_state"
+            android:textSize="18sp"
+            android:text="Logout"
+            android:gravity="center_horizontal"
+            android:layout_alignParentBottom="true"/>
     </RelativeLayout>
 </android.support.v4.widget.DrawerLayout>

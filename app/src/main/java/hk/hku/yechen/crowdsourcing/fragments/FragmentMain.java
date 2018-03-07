@@ -15,6 +15,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTabHost;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -84,6 +85,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     private View contentView;
     private GoogleMap mMap;
     private View popView;
+    private LinearLayoutManager linearLayoutManager;
     private SupportMapFragment mapFragment;
     private List<DestinationModel> datas;
     private PolylineOptions polylineOptions;
@@ -115,10 +117,10 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     int orange;
     int green;
     int polyWidth = 5;
-    static final int ORIGIN_CODE = 0x10000000;
-    static final int DES_CODE = 0x10000001;
-    static final int ORIGIN_REVERSE_CODE = 0x10000002;
-    static final int DES_REVERSE_CODE = 0x10000003;
+    public static final int ORIGIN_CODE = 0x10000000;
+    public static final int DES_CODE = 0x10000001;
+    public static final int ORIGIN_REVERSE_CODE = 0x10000002;
+    public static final int DES_REVERSE_CODE = 0x10000003;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -271,7 +273,10 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             move(hk);
         }
 
-        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(getActivity(),
+                        Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(false);
             LevelLog.log(LevelLog.DEBUG,"mylocation","granted");
 
@@ -469,8 +474,9 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             popupWindow.setFocusable(false);
             popupWindow.setAnimationStyle(R.style.popup_style);
 
+            linearLayoutManager = new LinearLayoutManager(getActivity());
             recyclerView = (RecyclerView) popupView.findViewById(R.id.rcv_recommend);
-            recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+            recyclerView.setLayoutManager(linearLayoutManager);
         }
         popupWindow.showAtLocation(contentView, Gravity.BOTTOM|Gravity.CENTER,0,0);
     }
@@ -497,14 +503,18 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     @Override
     public void onDestroy() {
         super.onDestroy();
-        popupWindow.dismiss();
-        popupWindow = null;
+        if(popupWindow != null) {
+            popupWindow.dismiss();
+            popupWindow = null;
+        }
     }
 
     @Override
     public void onDestroyView() {
         writeUserInfo(originLatLng,destinationLatLng,originAddress,destinationAddress);
-        popupWindow.dismiss();
+        if(popupWindow != null) {
+            popupWindow.dismiss();
+        }
         super.onDestroyView();
     }
 
@@ -530,9 +540,10 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
                 viewHolder.setChildListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        popupWindow.dismiss();
+                     /*   popupWindow.dismiss();
                         Intent intent = new Intent(getActivity(), OrderDetailActivity.class);
-                        startActivity(intent);
+                        startActivity(intent);*/
+                     Toast.makeText(getActivity(),"Server Not Reachable",Toast.LENGTH_LONG).show();
                     }
                 },R.id.btn_detail);
                 viewHolder.setListener(new View.OnClickListener() {
@@ -588,7 +599,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             }
         };
         recyclerView.setAdapter(baseAdapter);
-        recyclerView.addItemDecoration(new SimpleItemDecorator(getContext(),SimpleItemDecorator.VERTICAL_LIST));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(),linearLayoutManager.getOrientation()));
+       // recyclerView.addItemDecoration(new SimpleItemDecorator(getContext(),SimpleItemDecorator.VERTICAL_LIST));
 
     }
 

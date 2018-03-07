@@ -4,52 +4,77 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.Inflater;
 
 import hk.hku.yechen.crowdsourcing.MainActivity;
 import hk.hku.yechen.crowdsourcing.R;
 import hk.hku.yechen.crowdsourcing.ShopActivity;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
+import hk.hku.yechen.crowdsourcing.adapters.HeaderBaseAdapter;
+import hk.hku.yechen.crowdsourcing.adapters.NormalTailorAdapter;
+import hk.hku.yechen.crowdsourcing.adapters.PullRecyclerViewListener;
+import hk.hku.yechen.crowdsourcing.model.ShopsModel;
+import hk.hku.yechen.crowdsourcing.presenter.LocationPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.ReloadPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.ResponseExtractor;
 import hk.hku.yechen.crowdsourcing.util.AdHandler;
 import hk.hku.yechen.crowdsourcing.util.AdPageChangedListener;
+import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 /**
  * Created by yechen on 2017/11/21.
  */
 
 public class FragmentService extends Fragment {
+    private static final int LOCATION_GET = 0x1000000;
+    private static final int LOCATION_RETRY = 0x1000001;
     private static final  int ADV_NUM = 5;
+    private List<ShopsModel> shopsModels;
     private ViewPager viewPager;
     private RecyclerView recyclerView;
     private ImageView imageView;
+    private ProgressBar progressBar;
     private View contentView;
-    private BaseAdapter<Object[]> adapter;
-    private List shops = new ArrayList();
-    private List descriptions = new ArrayList();
-    private List<Object[]> shopDatas = new ArrayList();
+    private Handler shopHandler;
+    private BaseAdapter<ShopsModel> adapter;
+    private HeaderBaseAdapter headerBaseAdapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private List<View> adViews;
     String originLatLng;
     String destinationLatLng;
     String originAddress;
     String destinationAddress;
+    private String currentLatLng;
+    private LatLng latLng;
+    private int offset = 1;
+    private int num = COUNT;
+    private static final int COUNT = 10;
+    private List<ShopsModel> newDatas;
     private final int[] resources = {R.drawable.mcdonald,
             R.drawable.seven_11,
             R.drawable.starbucks,
@@ -83,24 +108,40 @@ public class FragmentService extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if(contentView == null){
             contentView = inflater.inflate(R.layout.shop_layout,container,false);
+            shopsModels = new ArrayList<>();
             imageView = (ImageView) contentView.findViewById(R.id.iv_service_back);
             Glide.with(getActivity()).load(R.drawable.back_shop).into(imageView);
+            progressBar = (ProgressBar) contentView.findViewById(R.id.pb_shop);
+            shopHandler = new ShopHandler();
             readUserInfo();
             initAdvList(contentView);
             initShopList(contentView);
         }
         return contentView;
     }
-    public void initShopList(View view){
-        loadPictures();
-        recyclerView = (RecyclerView) view.findViewById(R.id.rcv_shops);
-        shopDatas = new ArrayList<>();
-        for(int i = 0;i < shops.size();i ++){
-            Object[] objects = new Object[2];
-            objects[0] = shops.get(i);
-            objects[1] = descriptions.get(i);
-            shopDatas.add(objects);
+    public void initShopList(final View view){
+        latLng = LocationPresenter.getCurrentLatLng(getActivity());
+        if(latLng == null){
+            shopHandler.sendEmptyMessageDelayed(LOCATION_RETRY,1000);
         }
+        else{
+            shopHandler.sendEmptyMessage(LOCATION_GET);
+        }
+   //     loadPictures();
+        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.srl_shop);
+        swipeRefreshLayout.setColorSchemeColors(
+                Color.GREEN,
+                Color.BLUE,
+                Color.CYAN);
+        recyclerView = (RecyclerView) view.findViewById(R.id.rcv_shops);
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                reloadPictures();
+            }
+        });
+
         final View.OnClickListener enterShop = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -108,7 +149,7 @@ public class FragmentService extends Fragment {
                 startActivity(intent);
             }
         };
-        adapter = new BaseAdapter<Object[]>(shopDatas) {
+        adapter = new BaseAdapter<ShopsModel>(shopsModels) {
 
             @Override
             public int getLayoutId(int viewType) {
@@ -116,14 +157,53 @@ public class FragmentService extends Fragment {
             }
 
             @Override
-            public void convert(Object[] data, GeneralViewHolder viewHolder, int position) {
-                viewHolder.setImageView(R.id.iv_shop, (Drawable)data[0]);
-                viewHolder.setTextView(R.id.tv_description, (String) data[1]);
-                viewHolder.setListener(new ShopListener((String)data[1],resources[position]));
+            public void convert(ShopsModel data, GeneralViewHolder viewHolder, int position) {
+                Glide.with(FragmentService.this).load(data.getImage()).into((ImageView)viewHolder.getView(R.id.iv_shop));
+                viewHolder.setTextView(R.id.tv_description,data.toString());
+                viewHolder.setListener(new ShopListener(data));
             }
+
         };
+        headerBaseAdapter = new NormalTailorAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(headerBaseAdapter);
+        recyclerView.addOnScrollListener(new PullRecyclerViewListener(getActivity(),shopHandler,true));
+    }
+    private class ShopHandler extends Handler{
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case NetworkPresenter.SHOP_RELOAD:
+                    ((MainActivity)getActivity()).getExecutorService().submit(
+                                    new ReloadPresenter<>(shopsModels,
+                                            newDatas,
+                                            shopHandler,
+                                            NetworkPresenter.SHOP_SUCCESS));
+                    swipeRefreshLayout.setRefreshing(false);
+                    break;
+                case PullRecyclerViewListener.SHOW_TAILER:
+                    headerBaseAdapter.showHeader(true);
+                    headerBaseAdapter.notifyDataSetChanged();
+                    loadPictures();
+                    break;
+                case NetworkPresenter.SHOP_SUCCESS:
+                    progressBar.setVisibility(View.GONE);
+                    headerBaseAdapter.showHeader(false);
+                    headerBaseAdapter.notifyDataSetChanged();
+                    offset = num;
+                    num = num + COUNT;
+                    break;
+                case LOCATION_GET:
+                    currentLatLng = latLng.latitude+","+latLng.longitude;
+                    loadPictures();
+                    break;
+                case LOCATION_RETRY:
+                    sendEmptyMessageDelayed(LOCATION_RETRY,1000);
+                    break;
+                default:
+                    swipeRefreshLayout.setRefreshing(false);
+            }
+        }
     }
     public void initAdvList(View view){
         viewPager = (ViewPager) view.findViewById(R.id.vp_adv);
@@ -169,11 +249,27 @@ public class FragmentService extends Fragment {
         viewPager.addOnPageChangeListener(new AdPageChangedListener(adHandler));
     }
     private void loadPictures(){
-        for(int i = 0;i < resources.length;i ++){
-            Drawable drawable = new BitmapDrawable(getResources(), BitmapFactory.decodeResource(getResources(),resources[i]));
-            shops.add(drawable);
-            descriptions.add(description[i]);
-        }
+
+        NetworkPresenter networkPresenter  = new NetworkPresenter(
+                NetworkPresenter.SHOP_SUCCESS,
+                NetworkPresenter.UrlBuilder.buildShopList(offset,num,currentLatLng),
+                null,
+                shopHandler,
+                new ResponseExtractor.ShopExtractor(shopsModels,shopHandler)
+        );
+        ((MainActivity)getActivity()).getExecutorService().submit(networkPresenter);
+    }
+
+    private void reloadPictures(){
+        newDatas = new ArrayList<>();
+        NetworkPresenter networkPresenter  = new NetworkPresenter(
+                NetworkPresenter.SHOP_RELOAD,
+                NetworkPresenter.UrlBuilder.buildShopList(0,COUNT,currentLatLng),
+                null,
+                shopHandler,
+                new ResponseExtractor.ShopExtractor(newDatas,shopHandler)
+        );
+        ((MainActivity)getActivity()).getExecutorService().submit(networkPresenter);
     }
     private void loadAdv(View view,int pic){
         ImageView imageView = (ImageView) view.findViewById(R.id.iv_ad);
@@ -184,18 +280,20 @@ public class FragmentService extends Fragment {
 
         private String name;
         private int backgroundID;
+        private ShopsModel shopsModel;
         public ShopListener(String name,int backgroundID){
             this.name = name;
             this.backgroundID = backgroundID;
         }
+        public ShopListener(ShopsModel shopsModel){
+            this.shopsModel = shopsModel;
+        }
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(getActivity(), ShopActivity.class);
-            intent.putExtra(ShopActivity.SHOPTITLE,name);
-            intent.putExtra(ShopActivity.BACKIMAGE,backgroundID);
-            intent.putExtra(ShopActivity.SHOPADD,originAddress);
+            intent.putExtra(ShopActivity.SHOP,shopsModel);
             intent.putExtra(ShopActivity.CUSTOMERADD,destinationAddress);
-            String[] strings = originLatLng.split(",");
+            String[] strings = shopsModel.getAddress().split(",");
             double latD = Double.valueOf(strings[0]);
             double lngD = Double.valueOf(strings[1]);
             intent.putExtra(ShopActivity.SHOPLAT,latD);
@@ -205,6 +303,7 @@ public class FragmentService extends Fragment {
             lngD = Double.valueOf(strings[1]);
             intent.putExtra(ShopActivity.CUSLAT,latD);
             intent.putExtra(ShopActivity.CUSLNG,lngD);
+            intent.putExtra(ShopActivity.CUSTOMERADD,originAddress);
             startActivity(intent);
         }
     }

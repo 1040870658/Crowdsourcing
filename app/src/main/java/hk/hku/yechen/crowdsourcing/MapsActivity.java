@@ -142,4 +142,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void move(Place place){
         mMap.moveCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
     }
+    public void GoBack(View view){
+        finish();
+    }
 }

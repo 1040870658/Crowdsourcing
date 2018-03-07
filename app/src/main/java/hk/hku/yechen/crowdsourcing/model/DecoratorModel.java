@@ -35,7 +35,6 @@ public class DecoratorModel {
     public static final int TEXT_TOP = 20;
 
     public DecoratorModel(){
-
     }
 
     public int getGroupNum() {

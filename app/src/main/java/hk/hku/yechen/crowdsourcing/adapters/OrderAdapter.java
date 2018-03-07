@@ -42,19 +42,19 @@ public class OrderAdapter extends GroupAdapter{
     @Override
     public int getLayoutId(int viewType) {
         if(viewType == ONGOING)
-            return R.layout.sub_orders;
+            return R.layout.sub_order_x;
         return R.layout.sub_orders_finished;
     }
 
     @Override
     public void convert(final Object data, BaseAdapter.GeneralViewHolder viewHolder, int position) {
-      // final OrderModel orderModel = (OrderModel) data;
+       final OrderModel orderModel = (OrderModel) data;
         viewHolder.setChildListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 Intent intent = new Intent(context, OrderDetailActivity.class);
-                //intent.putExtra(OrderDetailActivity.ORDER_AUG,data);
+                intent.putExtra(OrderDetailActivity.ORDER_AUG,orderModel);
                // intent.putExtra(OrderActivity.ORDER,orderModel);
                 context.startActivity(intent);
             }

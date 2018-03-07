@@ -12,6 +12,7 @@ import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TabWidget;
+import android.widget.TextView;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,6 +22,7 @@ import hk.hku.yechen.crowdsourcing.fragments.FragmentMain;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentOrders;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentService;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentTask;
+import hk.hku.yechen.crowdsourcing.model.UserModel;
 import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
@@ -38,6 +40,11 @@ public class MainActivity extends FragmentActivity {
     private String origin;
     private String destination;
     private NetworkPresenter networkPresenter;
+    public static UserModel userModel;
+    private TextView userText;
+    private TextView accountText;
+    private TextView creditText;
+    private TextView loginState;
     public static final String shared_table = "UserInfo";
     public static final String shared_originLatLng = "originLatLng";
     public static final String shared_desLatLng = "desLatLng";
@@ -76,6 +83,25 @@ public class MainActivity extends FragmentActivity {
         drawerLayout = (DrawerLayout) findViewById(R.id.main_container);
         drawerSetting = (RelativeLayout)findViewById(R.id.main_drawer);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        userText = (TextView) drawerLayout.findViewById(R.id.tv_drawerName);
+        accountText = (TextView) drawerLayout.findViewById(R.id.tv_account);
+        creditText = (TextView) drawerLayout.findViewById(R.id.tv_credit);
+        loginState = (TextView) drawerLayout.findViewById(R.id.tv_login_state);
+
+        loginState.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,LoginActivity.class);
+                startActivity(intent);
+                userModel = null;
+                finish();
+            }
+        });
+        if(userModel != null){
+            userText.setText(userModel.getUserName());
+            accountText.setText(String.valueOf(userModel.getProperty()));
+            creditText.setText(String.valueOf(userModel.getCredit()));
+        }
     }
 
     @Override

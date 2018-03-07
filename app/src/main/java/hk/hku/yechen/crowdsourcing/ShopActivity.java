@@ -1,16 +1,24 @@
 package hk.hku.yechen.crowdsourcing;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,10 +28,20 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
+import hk.hku.yechen.crowdsourcing.adapters.HeaderBaseAdapter;
+import hk.hku.yechen.crowdsourcing.adapters.NormalTailorAdapter;
+import hk.hku.yechen.crowdsourcing.adapters.PullRecyclerViewListener;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.model.OrderModel;
+import hk.hku.yechen.crowdsourcing.model.ShopsModel;
+import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.ReloadPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.ResponseExtractor;
+import hk.hku.yechen.crowdsourcing.util.LevelLog;
 import hk.hku.yechen.crowdsourcing.util.SimpleItemDecorator;
 
 /**
@@ -31,7 +49,12 @@ import hk.hku.yechen.crowdsourcing.util.SimpleItemDecorator;
  */
 
 public class ShopActivity extends Activity {
+    private ProgressBar progressBar;
+    private HeaderBaseAdapter headerBaseAdapter;
+    private CommodityHandler commodityHandler;
     private List<CommodityModel> datas;
+    private List<CommodityModel> newDatas;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
     private BaseAdapter adapter;
     private ImageView backGround;
@@ -48,26 +71,77 @@ public class ShopActivity extends Activity {
     private double cusLng;
     private double price;
     private int itemNum = 0;
+    private ShopsModel shopsModel;
+    private ExecutorService executorService;
     private HashMap<CommodityModel,Integer> commodities;
-    public static final String BACKIMAGE = "IMAGEID";
     public static final String SHOPADD = "SHOPADD";
     public static final String CUSTOMERADD = "CUSTOMERADD";
-    public static final String SHOPTITLE = "SHOPTITLE";
     public static final String SHOPLAT = "SHOPLAT";
     public static final String SHOPLNG = "SHOPLng";
     public static final String CUSLAT = "CUSLAT";
     public static final String CUSLNG = "CUSLNG";
+    public static final String SHOP = "SHOP";
+    private int offset = 0;
+    private int num = COUNT;
+    private static final int COUNT = 10;
+
+    private class CommodityHandler extends Handler{
+        Context context;
+        public CommodityHandler(Context context){
+            this.context = context;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case NetworkPresenter.SHOP_RELOAD:
+                    executorService.submit(
+                            new ReloadPresenter<>(datas,
+                                    newDatas,
+                                    commodityHandler,
+                                    NetworkPresenter.COMMODITY_SHOP_SUCCESS));
+                    swipeRefreshLayout.setRefreshing(false);
+                    break;
+                case PullRecyclerViewListener.SHOW_TAILER:
+                    headerBaseAdapter.showHeader(true);
+                    getData(shopsModel);
+                    headerBaseAdapter.notifyDataSetChanged();
+                    break;
+                case NetworkPresenter.COMMODITY_SHOP_SUCCESS:
+                    progressBar.setVisibility(View.GONE);
+                    headerBaseAdapter.notifyDataSetChanged();
+                    offset = num;
+                    num = num + COUNT;
+                    headerBaseAdapter.showHeader(false);
+                    break;
+                case NetworkPresenter.H_FAIL:
+                    swipeRefreshLayout.setRefreshing(false);
+                    Toast.makeText(context,"Network Error",Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.shop_activity_layout);
+        executorService = Executors.newSingleThreadExecutor();
+        commodityHandler = new CommodityHandler(this);
         commodities = new HashMap<>();
         launchButton = (Button) findViewById(R.id.btn_buy);
         titleView = (TextView) findViewById(R.id.tv_shop_title);
         priceView = (TextView) findViewById(R.id.tv_order_price);
+        progressBar = (ProgressBar) findViewById(R.id.pb_commodity);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.srl_commodity);
+        swipeRefreshLayout.setColorSchemeColors(
+                Color.GREEN,
+                Color.BLUE,
+                Color.CYAN);
         price = 0.0;
         getDataFromMain();
+
         launchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -79,17 +153,16 @@ public class ShopActivity extends Activity {
                 //TODO: trans orderModel to OrderActivity
                 OrderModel orderModel = new OrderModel(0,commodities,
                         new LatLng(shopLat,shopLng),new LatLng(cusLat,cusLng),
-                        "香港大学西营盘大学图书馆大楼旧翼地下","香港大学图书馆");
+                        shopsModel.getPysicalAdd(),cusADD);
                 orderModel.setPrice(price);
                 Intent intent = new Intent(ShopActivity.this,OrderActivity.class);
                 intent.putExtra(OrderActivity.ORDER,orderModel);
-       //         intent.putExtra(SHOPADD,shopADD);
-       //         intent.putExtra(CUSTOMERADD,cusADD);
                 startActivity(intent);
             }
         });
+        datas = new ArrayList<>();
         customizeActionBar();
-        getData(null);
+     //   getData(null);
 
         if(imageSRC != -1) {
             backGround = (ImageView) findViewById(R.id.iv_shop_back);
@@ -109,7 +182,8 @@ public class ShopActivity extends Activity {
             public void convert(final CommodityModel data, final GeneralViewHolder viewHolder, int position) {
                 viewHolder.setTextView(R.id.tv_item_name,data.getName());
                 viewHolder.setTextView(R.id.tv_price,"$"+data.getPrice());
-                viewHolder.setImageView(ShopActivity.this,R.id.iv_item_pic,data.getImgID());
+                Glide.with(ShopActivity.this).load(data.getImgURL()).into((ImageView) viewHolder.getView(R.id.iv_item_pic));
+            //    viewHolder.setImageView(ShopActivity.this,R.id.iv_item_pic,data.getImgID());
                 final TextView itemNumTextView = viewHolder.getView(R.id.tv_item_num);
                 final int limit = data.getAvaNum();
                 viewHolder.setTextView(R.id.tv_stock,"Stock: "+String.valueOf(limit));
@@ -134,7 +208,10 @@ public class ShopActivity extends Activity {
                         if(itemNum > limit) {
                             itemNum --;
                             itemNumTextView.setText(String.valueOf(itemNum));
-                            commodities.put(data,itemNum);
+                            if(itemNum == 0)
+                                commodities.remove(data);
+                            else
+                                commodities.put(data,itemNum);
                             price -= data.getPrice();
                             priceView.setText("$"+price);
                         }
@@ -142,26 +219,46 @@ public class ShopActivity extends Activity {
                 },R.id.ib_minus);
             }
         };
+        headerBaseAdapter = new NormalTailorAdapter(adapter);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                reloadPictures(shopsModel);
+            }
+        });
         recyclerView = (RecyclerView) findViewById(R.id.rcv_commodity_list);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new SimpleItemDecorator(this,SimpleItemDecorator.VERTICAL_LIST));
+        recyclerView.setAdapter(headerBaseAdapter);
+        recyclerView.addOnScrollListener(new PullRecyclerViewListener(this,commodityHandler,true));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                layoutManager.getOrientation());
+        recyclerView.addItemDecoration(dividerItemDecoration);
+        getData(shopsModel);
     }
-    private void getData(String shopID){
-        datas = new ArrayList<>();
-        datas.add(new CommodityModel("American Blueberry Scone",50,R.drawable.american_blueberry_scone,12));
-        datas.add(new CommodityModel("Chicken Mushroom Pie",40,R.drawable.chicken_mushroom_pie,20));
-        datas.add(new CommodityModel("Cinnamon Danish",30,R.drawable.cinnamon_danish,100));
-        datas.add(new CommodityModel("French Butter Croissant",35,R.drawable.croque_monsieuer,50));
-        datas.add(new CommodityModel("Sausage Roll",38,R.drawable.sausage_roll,32));
-        datas.add(new CommodityModel("Croque Monsieuer",42,R.drawable.french_butter_croissant,11));
-        datas.add(new CommodityModel("Mushroom Cheese Pocket",42,R.drawable.mushroom_cheese_pocket,16));
-        datas.add(new CommodityModel("Chicken Mushroom Pie",40,R.drawable.chicken_mushroom_pie,67));
-        datas.add(new CommodityModel("Cinnamon Danish",30,R.drawable.cinnamon_danish,33));
-        datas.add(new CommodityModel("French Butter Croissant",35,R.drawable.croque_monsieuer,76));
-        datas.add(new CommodityModel("Sausage Roll",38,R.drawable.sausage_roll,3));
-        datas.add(new CommodityModel("American Blueberry Scone",50,R.drawable.american_blueberry_scone,65));
+    private void reloadPictures(ShopsModel shop){
+        newDatas = new ArrayList<>();
+        NetworkPresenter networkPresenter  = new NetworkPresenter(
+                NetworkPresenter.SHOP_RELOAD,
+                NetworkPresenter.UrlBuilder.buildCommodityInShop(shop.getId(),0,COUNT),
+                null,
+                commodityHandler,
+                new ResponseExtractor.CommodityExtractor(newDatas,commodityHandler)
+        );
+        executorService.submit(networkPresenter);
     }
+    private void getData(ShopsModel shop){
+
+        NetworkPresenter networkPresenter = new NetworkPresenter(
+                NetworkPresenter.COMMODITY_SHOP_SUCCESS,
+                NetworkPresenter.UrlBuilder.buildCommodityInShop(shop.getId(),offset,num),
+                null,
+                commodityHandler,
+                new ResponseExtractor.CommodityExtractor(datas,commodityHandler)
+        );
+        executorService.submit(networkPresenter);
+    }
+
     void customizeActionBar() {
 
         getActionBar().setDisplayHomeAsUpEnabled(false);
@@ -177,8 +274,8 @@ public class ShopActivity extends Activity {
         Intent intent = getIntent();
         if(intent == null)
             return;
-        imageSRC = intent.getIntExtra(BACKIMAGE,-1);
-        shopTitle = intent.getStringExtra(SHOPTITLE);
+        shopsModel = intent.getParcelableExtra(SHOP);
+        shopTitle = shopsModel.toString();
         shopADD = intent.getStringExtra(SHOPADD);
         cusADD = intent.getStringExtra(CUSTOMERADD);
         shopLat = intent.getDoubleExtra(SHOPLAT,0.0);

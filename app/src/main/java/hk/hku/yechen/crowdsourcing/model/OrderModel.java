@@ -16,6 +16,9 @@ import java.util.List;
  * OrderModel is for an order which consists of commodity
  */
 public class OrderModel implements Parcelable{
+
+    private final int LIMIT = 50;
+
     private String shopAdd;
     private String targetAdd;
     private double startLat;
@@ -26,10 +29,17 @@ public class OrderModel implements Parcelable{
     private LatLng end;
     private int id;
     private double price;
+    private double tips;
     private HashMap<CommodityModel,Integer> commodities;
 
     public void setPrice(double price){
         this.price = price;
+        tips = price / 10;
+        if(tips > LIMIT)
+            tips = LIMIT;
+    }
+    public double getTips(){
+        return tips;
     }
     public double getPrice(){
         return price;
@@ -67,7 +77,8 @@ public class OrderModel implements Parcelable{
     }
 
 
-    public OrderModel(int id, HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,String shopAdd,String targetAdd){
+    public OrderModel(int id, HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
+                      String shopAdd,String targetAdd){
         this.id = id;
         this.commodities = commodities;
         this.start = start;
@@ -78,6 +89,20 @@ public class OrderModel implements Parcelable{
         this.endLng = end.longitude;
         this.targetAdd = targetAdd;
         this.shopAdd = shopAdd;
+    }
+    public OrderModel(int id, HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
+                      String shopAdd,String targetAdd,double price){
+        this.id = id;
+        this.commodities = commodities;
+        this.start = start;
+        this.end = end;
+        this.startLng = start.longitude;
+        this.startLat = start.latitude;
+        this.endLat = end.latitude;
+        this.endLng = end.longitude;
+        this.targetAdd = targetAdd;
+        this.shopAdd = shopAdd;
+        setPrice(price);
     }
 
     public void setShopAdd(String shopAdd) {

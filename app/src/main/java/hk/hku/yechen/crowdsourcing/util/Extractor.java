@@ -7,5 +7,5 @@ import okhttp3.Response;
  */
 
 public interface Extractor {
-    public void extract(Response response,int messageCode);
+    public void  extract(Response response,int messageCode);
 }

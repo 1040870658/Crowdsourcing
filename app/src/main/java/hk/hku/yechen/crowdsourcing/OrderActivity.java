@@ -19,6 +19,7 @@ import java.util.Map;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.model.OrderModel;
+import hk.hku.yechen.crowdsourcing.model.UserModel;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 /**
@@ -27,12 +28,14 @@ import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 public class OrderActivity extends Activity {
     public static final String ORDER = "ORDER_DETAIL";
+    private TextView phoneText;
+    private TextView cusNameText;
     private TextView addressText;
     private TextView priceText;
     private String address= "";
     private Button payButton;
-    private String shopADD;
-    private String cusADD;
+    private TextView tipsText;
+    private TextView totalText;
     private TextView shopAddressView;
     private OrderModel orderModel;
     private RecyclerView recyclerView;
@@ -46,6 +49,11 @@ public class OrderActivity extends Activity {
         payButton.setOnClickListener(new PayListener());
         addressText = (TextView) findViewById(R.id.tv_confirm_address);
         priceText = (TextView) findViewById(R.id.tv_order_confirm_price);
+        tipsText = (TextView) findViewById(R.id.tv_tips_price);
+        totalText = (TextView) findViewById(R.id.tv_total_price);
+        phoneText = (TextView) findViewById(R.id.tv_order_confirm_tel);
+        cusNameText = (TextView) findViewById(R.id.tv_order_confirm_name);
+
         addressText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,11 +83,16 @@ public class OrderActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        address = data.getStringExtra("address");
-        addressText.setText(address);
+        if(resultCode == RESULT_OK) {
+            address = data.getStringExtra("address");
+            addressText.setText(address);
+        }
     }
 
     void customizeActionBar() {
+
+        if (getActionBar() == null)
+            return;
 
         getActionBar().setDisplayHomeAsUpEnabled(false);
         getActionBar().setHomeButtonEnabled(true);
@@ -104,15 +117,23 @@ public class OrderActivity extends Activity {
         }
     }
     private void getDataFromShop(){
+
         Intent intent = getIntent();
+
         if(intent == null) {
             return;
         }
+
         orderModel = getIntent().getParcelableExtra(ORDER);
         if(orderModel != null){
             shopAddressView.setText(orderModel.getShopAdd());
             addressText.setText(orderModel.getTargetAdd());
-            priceText.setText("$"+orderModel.getPrice());
+            priceText.setText(String.valueOf("$"+orderModel.getPrice()));
+            UserModel userModel = MainActivity.userModel;
+            if(userModel != null){
+                phoneText.setText(userModel.getPhone());
+                cusNameText.setText(userModel.getUserName());
+            }
             description = new ArrayList<>();
             CommodityModel tmp;
             HashMap<CommodityModel,Integer> commodityMap = orderModel.getCommodityMap();
@@ -120,6 +141,8 @@ public class OrderActivity extends Activity {
                 tmp = entry.getKey();
                 description.add(tmp);
             }
+            tipsText.setText(String.valueOf("$"+orderModel.getTips()));
+            totalText.setText(String.valueOf("$"+(orderModel.getTips() + orderModel.getPrice())));
         }
     }
 }

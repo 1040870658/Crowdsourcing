@@ -5,4 +5,8 @@ package hk.hku.yechen.crowdsourcing.presenter;
  */
 
 public class OrderPresenter implements Presenter {
+    @Override
+    public void fetchData() {
+
+    }
 }

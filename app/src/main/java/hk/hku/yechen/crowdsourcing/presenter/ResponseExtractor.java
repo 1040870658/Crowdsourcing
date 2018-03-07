@@ -2,6 +2,7 @@ package hk.hku.yechen.crowdsourcing.presenter;
 
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -12,8 +13,14 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executor;
 
+import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.model.DestinationModel;
+import hk.hku.yechen.crowdsourcing.model.ShopsModel;
+import hk.hku.yechen.crowdsourcing.model.UserModel;
+import hk.hku.yechen.crowdsourcing.network.Network;
 import hk.hku.yechen.crowdsourcing.util.Extractor;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
 import okhttp3.Response;
@@ -84,6 +91,59 @@ public class ResponseExtractor implements Extractor {
         }
     }
 
+   public static class UserExtractor implements Extractor{
+        private JSONObject data;
+        private Handler handler;
+
+        public UserExtractor(Handler handler){
+            this.handler = handler;
+        }
+        @Override
+        public void extract(Response response, int messageCode) {
+            try {
+                if(response == null){
+                    data = null;
+                    return;
+                }
+                else {
+                    ResponseBody body = response.body();
+                    if(body != null) {
+                        data = new JSONObject(body.string());
+                    }
+                    else {
+                        data = null;
+                        return;
+                    }
+                }
+
+                if(data.getString("success").equals("false")){
+                    handler.sendEmptyMessage(NetworkPresenter.REG_FAIL);
+                    handler.sendEmptyMessage(NetworkPresenter.LOGIN_FAIL);
+                    return;
+                }
+
+                data = data.getJSONObject("data");
+                UserModel userModel = new UserModel(
+                        data.getString("phone"),
+                        data.getString("userName"),
+                        data.getString("passWord"),
+                        data.getString("email"),
+                        data.getInt("credit"),
+                        data.getDouble("property"));
+                Message message = new Message();
+                message.obj = userModel;
+                message.what = messageCode;
+                handler.sendMessage(message);
+            }catch (IOException e){
+                LevelLog.log(LevelLog.ERROR,"IOEXception",e.toString());
+                handler.sendEmptyMessage(NetworkPresenter.H_FAIL);
+            }catch (JSONException e){
+                LevelLog.log(LevelLog.ERROR,"JsonEXception",e.toString());
+                handler.sendEmptyMessage(NetworkPresenter.H_FAIL);
+
+            }
+        }
+    }
     public static class RouteExtractor implements Extractor {
 
         private JSONObject data;
@@ -163,8 +223,120 @@ public class ResponseExtractor implements Extractor {
         }
     }
 
-    public void onSuccess(){
+    public static class CommodityExtractor implements Extractor{
+
+        private Handler handler;
+        private List<CommodityModel> commodityModels;
+
+        public CommodityExtractor(List<CommodityModel> commodityModels,Handler handler){
+            this.handler = handler;
+            this.commodityModels = commodityModels;
+        }
+        @Override
+        public void extract(Response response, int messageCode) {
+            JSONArray jsonArray;
+            JSONObject data;
+            if(response == null){
+                return;
+            }
+            else {
+                ResponseBody body = response.body();
+                if (body != null) {
+                    try {
+                        jsonArray = new JSONArray(body.string());
+                        CommodityModel commodityModel;
+                        synchronized (commodityModels) {
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                data = jsonArray.getJSONObject(i);
+                                if (data == null)
+                                    break;
+
+                                commodityModel = new CommodityModel(
+                                        data.getLong("commodityID"),
+                                        data.getLong("shopID"),
+                                        data.getString("commodityName"),
+                                        data.getDouble("commodityPrice"),
+                                        data.getString("image"),
+                                        data.getInt("commodityStock")
+                                );
+
+                                commodityModels.add(commodityModel);
+                            }
+                        }
+                        handler.sendEmptyMessage(messageCode);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    return;
+                }
+            }
+        }
     }
+    public static class ShopExtractor implements Extractor{
+
+        private Handler handler;
+        private List<ShopsModel> shopsData;
+
+        public ShopExtractor(List<ShopsModel> shopsData,Handler handler){
+            this.handler = handler;
+            this.shopsData = shopsData;
+        }
+
+        @Override
+        public void extract(Response response, int messageCode) {
+            JSONArray jsonArray;
+            JSONObject data;
+            if(response == null){
+                return;
+            }
+            else {
+                ResponseBody body = response.body();
+                if(body != null) {
+
+
+                    try {
+                        jsonArray = new JSONArray(body.string());
+                        ShopsModel shopsModel;
+
+                        synchronized (shopsData) {
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                data = jsonArray.getJSONObject(i);
+                                if (data == null)
+                                    break;
+                                JSONObject shop = data.getJSONObject("shop");
+                                if (shop == null)
+                                    break;
+                                shopsModel = new ShopsModel(
+                                        shop.getString("image"),
+                                        shop.getLong("shopId"),
+                                        shop.getString("address"),
+                                        shop.getString("pysicalAddress"),
+                                        shop.getString("shopName"),
+                                        data.getString("distanceText"),
+                                        data.getString("durationText")
+                                );
+                                shopsData.add(shopsModel);
+                            }
+                        }
+                        handler.sendEmptyMessage(messageCode);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
+                    return;
+                }
+            }
+        }
+    }
+    public void onSuccess(){}
     public void onError(){
         LevelLog.log(LevelLog.ERROR,"ResponseExtractor","JsonArray Explained failed");
     }

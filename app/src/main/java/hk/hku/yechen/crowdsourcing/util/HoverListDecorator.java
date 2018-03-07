@@ -1,10 +1,12 @@
 package hk.hku.yechen.crowdsourcing.util;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.View;
 
 import java.util.List;
@@ -81,6 +83,10 @@ public class HoverListDecorator extends RecyclerView.ItemDecoration {
         positions = decoratorModel.getGroupPositions();
         hasFindPotential = false;
         int childcount = parent.getChildCount();
+        int MY_DIP_VALUE = 16; //5dp
+
+        int pixel= (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                MY_DIP_VALUE, parent.getContext().getResources().getDisplayMetrics());
         for(int i = 0;i < childcount;i ++) {
             if(i == 0)
                 continue;
@@ -98,7 +104,7 @@ public class HoverListDecorator extends RecyclerView.ItemDecoration {
                 c.drawRect(parent.getPaddingLeft(),view.getTop() - DecoratorModel.NORMAL_HEIGHT ,
                         parent.getRight() - parent.getPaddingRight(), view.getTop(), mPaint);
                 mPaint.setColor(decoratorModel.getGroupTextColor().get(group));
-                mPaint.setTextSize(40);
+                mPaint.setTextSize(pixel);
                 c.drawText(decoratorModel.getGroupText().get(group),
                         parent.getPaddingLeft() + DecoratorModel.PADDING_LEFT, view.getTop() - DecoratorModel.TEXT_TOP, mPaint);
             }

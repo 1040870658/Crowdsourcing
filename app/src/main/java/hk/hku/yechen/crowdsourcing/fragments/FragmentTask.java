@@ -3,6 +3,7 @@ package hk.hku.yechen.crowdsourcing.fragments;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import hk.hku.yechen.crowdsourcing.R;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.adapters.TaskAdapter;
 import hk.hku.yechen.crowdsourcing.util.HoverListDecorator;
+import hk.hku.yechen.crowdsourcing.util.SimpleItemDecorator;
 
 /**
  * Created by yechen on 2017/11/21.
@@ -37,7 +39,11 @@ public class FragmentTask extends Fragment {
             adapter = new TaskAdapter(tasks,getActivity());
             recyclerView = (RecyclerView) contentView.findViewById(R.id.rcv_task);
             recyclerView.setAdapter(adapter);
-            recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+            LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+            recyclerView.setLayoutManager(layoutManager);
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                    layoutManager.getOrientation());
+            recyclerView.addItemDecoration(dividerItemDecoration);
             recyclerView.addItemDecoration(new HoverListDecorator(getResources(),tasks,titles));
         }
         return contentView;

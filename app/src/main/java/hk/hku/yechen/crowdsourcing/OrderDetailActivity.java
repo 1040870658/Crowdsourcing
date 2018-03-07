@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.model.OrderModel;
 
@@ -29,13 +32,23 @@ public class OrderDetailActivity extends Activity {
     private OrderModel orderModel;
     private List<CommodityModel> description;
     private TextView shopAddressView;
+    private TextView tipText;
+    private TextView totalText;
+    private TextView priceText;
+    private RecyclerView recyclerView;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.order_confirm_general);
         customizeActionBar();
+        addressText = (TextView) findViewById(R.id.tv_confirm_address);
         backButton = (Button) findViewById(R.id.btn_throw);
         shopAddressView = (TextView) findViewById(R.id.tv_confirm_shop);
+        tipText = (TextView) findViewById(R.id.tv_tips_price);
+        totalText = (TextView) findViewById(R.id.tv_total_price);
+        priceText = (TextView) findViewById(R.id.tv_order_confirm_price);
+        recyclerView = (RecyclerView) findViewById(R.id.rcv_order_confirm);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         backButton.setOnClickListener(new View.OnClickListener(){
 
             @Override
@@ -44,6 +57,19 @@ public class OrderDetailActivity extends Activity {
             }
         });
         getDataFromShop();
+        recyclerView.setAdapter(new BaseAdapter<CommodityModel>(description) {
+            @Override
+            public int getLayoutId(int viewType) {
+                return R.layout.order_description;
+            }
+
+            @Override
+            public void convert(CommodityModel data, GeneralViewHolder viewHolder, int position) {
+                viewHolder.setTextView(R.id.tv_order_description,data.getName());
+                viewHolder.setTextView(R.id.tv_order_description_number,"x"+orderModel.getCommodityMap().get(data));
+            }
+
+        });
     }
 
     @Override
@@ -84,7 +110,7 @@ public class OrderDetailActivity extends Activity {
         if(intent == null) {
             return;
         }
-        orderModel = getIntent().getParcelableExtra(OrderActivity.ORDER);
+        orderModel = getIntent().getParcelableExtra(ORDER_AUG);
         if(orderModel != null){
             shopAddressView.setText(orderModel.getShopAdd());
             addressText.setText(orderModel.getTargetAdd());
@@ -95,6 +121,9 @@ public class OrderDetailActivity extends Activity {
                 tmp = entry.getKey();
                 description.add(tmp);
             }
+            priceText.setText("$"+orderModel.getPrice());
+            tipText.setText("$"+orderModel.getTips());
+            totalText.setText("$"+ (orderModel.getPrice()+orderModel.getTips()));
         }
     }
 }

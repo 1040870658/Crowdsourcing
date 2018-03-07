@@ -11,5 +11,8 @@
     <dimen name="summary_text_size">12sp</dimen>
     <dimen name="navigation_size">25dp</dimen>
     <dimen name="tab">20dp</dimen>
+    <dimen name="button_width">60dp</dimen>
     <dimen name="order_list">50dp</dimen>
+    <dimen name="button_height">35dp</dimen>
+    <dimen name="group_title">14sp</dimen>
 </resources>

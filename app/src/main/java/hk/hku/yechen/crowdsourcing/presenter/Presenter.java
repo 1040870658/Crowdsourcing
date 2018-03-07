@@ -5,4 +5,5 @@ package hk.hku.yechen.crowdsourcing.presenter;
  */
 
 public interface Presenter {
+    public void fetchData();
 }

@@ -2,11 +2,32 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent">
     <fragment  xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true"
+        android:id="@+id/ll_topbar"
+        >
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="#00000000"
+            android:src="@drawable/selector_back"
+            android:id="@+id/ib_top_back"
+            android:onClick="GoBack"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAlignment="center"
+            android:text="Re-select Target Address"
+            android:textSize="20sp"
+            android:id="@+id/tv_shop_title"/>
+    </LinearLayout>
     <RelativeLayout
         android:background="@color/white"
         android:layout_alignParentBottom="true"

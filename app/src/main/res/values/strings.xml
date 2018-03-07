@@ -13,4 +13,30 @@
     <string name="order_title_1">Orders In Process</string>
     <string name="order_title_2">Orders Finished</string>
     <string name="API_KEY">AIzaSyCjfLvzS4F4EvJMl_rSTpfij6wrSbWnuDA</string>
+    <string name="Server_ip">147.8.102.137</string>
+    <string name="title_activity_login">Sign in</string>
+    <string name="header_text">Refreshing...</string>
+    <string name="tailor_text">Connecting...</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_phone">Phone</string>
+    <string name="username">User Name</string>
+    <string name="prompt_password">Password</string>
+    <string name="prompt_email">Email(Optional)</string>
+    <string name="prompt_id_card">ID_Card(Optional)</string>
+    <string name="hint_email">Email(Optional)</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_register">Register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="action_register_short">Register</string>
+    <string name="error_invalid_phone">This phone number required 8 digits</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="action_switch_register">register</string>
+    <string name="action_switch_login">login</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing phone
+        completions."
+    </string>
+    <string name="title_activity_register">Register</string>
 </resources>

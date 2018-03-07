@@ -5,6 +5,7 @@ import android.os.Message;
 import android.util.ArrayMap;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,9 +21,18 @@ import okhttp3.Response;
  */
 
 public class NetworkPresenter implements Runnable{
+    public static final int COMMODITY_SHOP_FAIL = 0x00000011;
+    public static final int COMMODITY_SHOP_SUCCESS = 0x00000010;
+    public static final int SHOP_SUCCESS = 0x00000008;
+    public static final int SHOP_RELOAD = 0x00000012;
+    public static final int SHOP_FAIL = 0x00000009;
     public static final int H_SUCCESS = 0x00000001;
     public static final int D_SUCCESS = 0x00000003;
     public static final int GEO_SUCCESS = 0x0000002;
+    public static final int LOGIN_SUCCESS = 0x00000004;
+    public static final int LOGIN_FAIL = 0x00000005;
+    public static final int REG_FAIL = 0x00000006;
+    public static final int REG_SUCCESS = 0x00000007;
     public static final int H_FAIL = 0x00000000;
     public static final int ASYN = 1;
     public static final int SYN = 0;
@@ -32,8 +42,13 @@ public class NetworkPresenter implements Runnable{
     //  private static String DESTINATION = "22.2831928,114.1381175";
     private static String BEGIN = "22.313297,114.170546";
     private static String DESTINATION = "22.283208,114.138175";
+    public static String ip_address = "147.8.104.73:8080";
+    public static final String LOGIN = "http://"+ip_address+"/user/login?";
+    public static final String REGISTER = "http://"+ip_address+"/user/register?";
     public static final String RGEO_SEARCH = "https://maps.googleapis.com/maps/api/geocode/json?";
     public static final String ROUTE_SEARCH = "https://maps.googleapis.com/maps/api/directions/json?";
+    public static final String SHOP_LIST = "http://"+ip_address+"/shop/list?";
+    public static final String COMMODITY_IN_SHOP = "http://"+ip_address+"/commodity/singleshop?";
     //        "origin=22.283257,114.136774&destination=22.2831928,114.1381175&sensor=true&mode=walking&key=AIzaSyCN8pCyzbH7sNTHpaeEA7Rg48nt49WoUOU";
     public static final String NEARBY_SEARCH =
             "https://maps.googleapis.com/maps/api/place/nearbysearch/json" +
@@ -69,6 +84,9 @@ public class NetworkPresenter implements Runnable{
         this.listener = listener;
         this.messageCode = messageCode;
         this.handler = handler;
+        String[] a;
+        String[] b = new String[2];
+        a = b.clone();
     }
     public static class UrlBuilder{
         public static String buildRoute(String origin,String destination){
@@ -92,6 +110,29 @@ public class NetworkPresenter implements Runnable{
             String url = RGEO_SEARCH+"latlng="+latlng;
         //    messageCode = reqCode;
             return url + "&key=AIzaSyCN8pCyzbH7sNTHpaeEA7Rg48nt49WoUOU";
+        }
+        public static String buildLogin(String phone,String password){
+            return LOGIN + "userId="+phone+"&password="+password;
+        }
+
+        public static String buildRegister(String phone,String userName,String password,String idCard,String email){
+            String url= REGISTER +"phone="+phone+
+                    "&username="+userName+
+                    "&password="+password+
+                    "&idCard="+idCard+
+                    "&email="+email;
+            return url;
+        }
+
+        public static String buildShopList(int offset,int count,String location){
+            String url = SHOP_LIST + "offset="+offset
+                    +"&num="+count
+                    +"&location="+location;
+            return url;
+        }
+
+        public static String buildCommodityInShop(long shopId,int offset,int count){
+            return COMMODITY_IN_SHOP+"shopId="+shopId+"&offset="+offset+"&count="+count;
         }
     }
     public static FormBody DefineBody(HashMap<String,String> hashMap){
@@ -121,6 +162,7 @@ public class NetworkPresenter implements Runnable{
             @Override
             public void onFailure(Call call, IOException e) {
                 LevelLog.log(LevelLog.ERROR,"asyn error",e.toString());
+                handler.sendEmptyMessage(NetworkPresenter.H_FAIL);
             }
 
             @Override

@@ -7,6 +7,12 @@
         android:layout_height="match_parent"
         android:alpha="0.2"
         android:id="@+id/iv_service_back"/>
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/pb_shop"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -18,13 +24,17 @@
         android:layout_alignParentTop="true">
 
     </android.support.v4.view.ViewPager>
-    <android.support.v7.widget.RecyclerView
-        android:layout_width="match_parent"
-        android:layout_marginTop="@dimen/small_v_gap"
-        android:layout_centerInParent="true"
-        android:layout_height="wrap_content"
-        android:id="@+id/rcv_shops">
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/small_v_gap"
+            android:id="@+id/srl_shop">
+            <android.support.v7.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/rcv_shops">
 
-    </android.support.v7.widget.RecyclerView>
+            </android.support.v7.widget.RecyclerView>
+        </android.support.v4.widget.SwipeRefreshLayout>
     </LinearLayout>
 </RelativeLayout>

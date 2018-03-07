@@ -16,7 +16,6 @@ import android.view.View;
  */
 
 public class SimpleItemDecorator extends RecyclerView.ItemDecoration {
-    private Context mContext;
     private Drawable mDivider;
     private int mOrientation;
     public static final int HORIZONTAL_LIST = LinearLayoutManager.HORIZONTAL;
@@ -28,7 +27,6 @@ public class SimpleItemDecorator extends RecyclerView.ItemDecoration {
     };
 
     public SimpleItemDecorator(Context context, int orientation) {
-        this.mContext = context;
         final TypedArray ta = context.obtainStyledAttributes(ATRRS);
         this.mDivider = ta.getDrawable(0);
         ta.recycle();
@@ -51,18 +49,18 @@ public class SimpleItemDecorator extends RecyclerView.ItemDecoration {
         }
     }
 
+
     //画横线, 这里的parent其实是显示在屏幕显示的这部分
     public void drawHorizontalLine(Canvas c, RecyclerView parent, RecyclerView.State state){
         int left = parent.getPaddingLeft();
         int right = parent.getWidth() - parent.getPaddingRight();
-        final int childCount = parent.getChildCount();
+        int top = parent.getPaddingTop();
+        int bottom = parent.getHeight() - parent.getPaddingBottom();
+        int childCount = parent.getChildCount();
         for (int i = 0; i < childCount; i++){
             final View child = parent.getChildAt(i);
-
             //获得child的布局信息
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)child.getLayoutParams();
-            final int top = child.getBottom() + params.bottomMargin;
-            final int bottom = top + mDivider.getIntrinsicHeight();
             mDivider.setBounds(left, top, right, bottom);
             mDivider.draw(c);
             //Log.d("wnw", left + " " + top + " "+right+"   "+bottom+" "+i);
@@ -97,5 +95,4 @@ public class SimpleItemDecorator extends RecyclerView.ItemDecoration {
             outRect.set(0, 0, mDivider.getIntrinsicWidth(), 0);
         }
     }
-
 }
