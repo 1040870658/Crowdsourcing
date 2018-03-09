@@ -13,11 +13,15 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import hk.hku.yechen.crowdsourcing.OrderActivity;
+import hk.hku.yechen.crowdsourcing.ShopActivity;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.model.DestinationModel;
+import hk.hku.yechen.crowdsourcing.model.OrderModel;
 import hk.hku.yechen.crowdsourcing.model.ShopsModel;
 import hk.hku.yechen.crowdsourcing.model.UserModel;
 import hk.hku.yechen.crowdsourcing.network.Network;
@@ -31,6 +35,10 @@ import okhttp3.ResponseBody;
  */
 
 public class ResponseExtractor implements Extractor {
+    public static final int SUCCESS = 1;
+    public static final int EXCEED = 0;
+    public static final int SERVER_ERROR = -1;
+    public static final int INSUFFICIENT_BALANCE = -2;
     public static final int E_SUCCESS = 0x00000011;
     public static final int D_SUCCESS = 0X00000014;
     public static final int E_Error = 0x00000012;
@@ -276,6 +284,158 @@ public class ResponseExtractor implements Extractor {
             }
         }
     }
+
+    public static class OrderLookup implements Extractor{
+        private Handler handler;
+        private List<List> orders;
+
+        public OrderLookup(Handler handler,List<List> orders){
+            this.handler = handler;
+            this.orders = orders;
+        }
+        @Override
+        public void extract(Response response, int messageCode){
+            JSONObject jsonObject;
+            JSONObject itemObject;
+            JSONArray jsonArray;
+            JSONArray itemArray;
+            JSONArray numberArray;
+            LatLng start;
+            LatLng end;
+            List<Integer> numbers;
+            List<OrderModel> finished;
+            List<OrderModel> inProcess;
+            HashMap<CommodityModel,Integer> commodityModelIntegerHashMap;
+            CommodityModel commodityModel;
+
+            if(response != null){
+                ResponseBody body = response.body();
+
+                if(body != null){
+
+                    try {
+                        synchronized (orders) {
+                            jsonArray = new JSONArray(body.string());
+                            finished = new ArrayList<>();
+                            inProcess = new ArrayList<>();
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                jsonObject = jsonArray.getJSONObject(i).getJSONObject("order");
+                                itemArray = jsonArray.getJSONObject(i).getJSONArray("commodityList");
+                                commodityModelIntegerHashMap = new HashMap<>();
+                                numbers = new ArrayList<>();
+                                numberArray = jsonArray.getJSONObject(i).getJSONArray("numbers");
+
+                                if (numberArray != null) {
+                                    for (int j = 0; j != numberArray.length(); j++) {
+                                        numbers.add(numberArray.getInt(j));
+                                    }
+                                }
+
+                                if (itemArray != null) {
+                                    for (int j = 0; j != itemArray.length(); j++) {
+                                        itemObject = itemArray.getJSONObject(j);
+                                        commodityModel = new CommodityModel(
+                                                itemObject.getLong("commodityID"),
+                                                itemObject.getLong("shopID"),
+                                                itemObject.getString("commodityName"),
+                                                itemObject.getDouble("commodityPrice"),
+                                                itemObject.getString("image"),
+                                                itemObject.getInt("commodityStock"));
+                                        commodityModelIntegerHashMap.put(commodityModel, numbers.get(j));
+                                    }
+                                }
+
+                                start = transferString2LatLng(jsonObject.getString("shopLatLng"));
+                                end = transferString2LatLng(jsonObject.getString("desLatLng"));
+                                OrderModel orderModel = new OrderModel(
+                                        jsonObject.getInt("orderId"),
+                                        jsonObject.getString("customerPhone"),
+                                        jsonObject.getString("providerPhone"),
+                                        commodityModelIntegerHashMap,
+                                        start,
+                                        end,
+                                        jsonObject.getString("shopAddress"),
+                                        jsonObject.getString("destination"),
+                                        jsonObject.getDouble("price")
+                                );
+                                int status = jsonObject.getInt("status");
+                                orderModel.setState(status);
+                                if (status == OrderModel.FINISHED) {
+                                    finished.add(orderModel);
+                                } else {
+                                    inProcess.add(orderModel);
+                                }
+                            }
+                            orders.clear();
+                            orders.add(inProcess);
+                            orders.add(finished);
+                            handler.sendEmptyMessage(messageCode);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    private static LatLng transferString2LatLng(String latlng){
+        String[] strings;
+        strings = latlng.split(",");
+        return new LatLng(Double.valueOf(strings[0]),Double.valueOf(strings[1]));
+    }
+    public static class LaunchExtractor implements Extractor{
+
+        private Handler handler;
+        private List<String> commodityNames;
+
+        public LaunchExtractor(List<String> commodityNames,Handler handler){
+            this.handler = handler;
+            this.commodityNames = commodityNames;
+        }
+
+        @Override
+        public void extract(Response response, int messageCode) {
+            JSONObject jsonObject;
+            JSONArray jsonArray;
+
+            if(response != null){
+                ResponseBody body = response.body();
+                if(body != null){
+
+                    try{
+                        jsonObject = new JSONObject(body.string());
+                        int state = jsonObject.getInt("state");
+                        switch (state) {
+                            case SUCCESS:
+                                handler.sendEmptyMessage(OrderActivity.LAUNCH_SUCCESS);
+                                break;
+                            case EXCEED :
+                                jsonArray = jsonObject.getJSONArray("commodityNames");
+                                for(int i = 0;i < jsonArray.length();i ++){
+                                    commodityNames.add(jsonArray.getString(i));
+                                }
+                                handler.sendEmptyMessage(OrderActivity.NUMBER_EXCEEDED);
+                                break;
+                            case SERVER_ERROR:
+                                handler.sendEmptyMessage(OrderActivity.LAUNCH_UNEXPECTED);
+                                break;
+                            case INSUFFICIENT_BALANCE:
+                                handler.sendEmptyMessage(OrderActivity.INSUFFICIENT_BALANCE);
+                                break;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
     public static class ShopExtractor implements Extractor{
 
         private Handler handler;

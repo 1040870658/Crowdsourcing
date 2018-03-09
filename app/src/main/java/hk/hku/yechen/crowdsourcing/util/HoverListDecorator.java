@@ -24,10 +24,16 @@ public class HoverListDecorator extends RecyclerView.ItemDecoration {
     private int potentialHoverTop;
     private int potentialHoverText;
     private boolean hasFindPotential = false;
+    private List<List> datas;
+
+    public void notifyDatasetChanged(){
+        decoratorModel.init(decoratorModel.getResources(),datas);
+    }
 
     public HoverListDecorator(Resources resources, List<List> datas, List<String> titles){
         init();
         decoratorModel = new DecoratorModel(resources, datas, titles);
+        this.datas = datas;
     }
     public HoverListDecorator(DecoratorModel decoratorModel){
         this.decoratorModel = decoratorModel;
@@ -69,10 +75,12 @@ public class HoverListDecorator extends RecyclerView.ItemDecoration {
 
             decoratorModel.setHoverText(group);
             // Log.e("groupText",decoratorModel.getHoverText());
-            mPaint.setColor(decoratorModel.getGroupColor().get(group));
+            if(decoratorModel.getGroupColor() != null && decoratorModel.getGroupColor().size() != 0)
+                mPaint.setColor(decoratorModel.getGroupColor().get(group));
             c.drawRect(parent.getPaddingLeft(), currentHoverTop,
                     parent.getRight() - parent.getPaddingRight(), currentHoverTop + DecoratorModel.HOVER_HEIGHT, mPaint);
-            mPaint.setColor(decoratorModel.getGroupTextColor().get(group));
+            if(decoratorModel.getGroupTextColor() != null && decoratorModel.getGroupTextColor().size() != 0)
+                mPaint.setColor(decoratorModel.getGroupTextColor().get(group));
             c.drawText(decoratorModel.getHoverText(),
                     parent.getPaddingLeft() + DecoratorModel.PADDING_LEFT, currentHoverTop + DecoratorModel.HOVER_TEXT_TOP , mPaint);
         }
@@ -105,6 +113,11 @@ public class HoverListDecorator extends RecyclerView.ItemDecoration {
                         parent.getRight() - parent.getPaddingRight(), view.getTop(), mPaint);
                 mPaint.setColor(decoratorModel.getGroupTextColor().get(group));
                 mPaint.setTextSize(pixel);
+                if(group >= decoratorModel.getGroupText().size()){
+                    group = decoratorModel.getGroupText().size() - 1;
+                    if(group < 0)
+                        group = 0;
+                }
                 c.drawText(decoratorModel.getGroupText().get(group),
                         parent.getPaddingLeft() + DecoratorModel.PADDING_LEFT, view.getTop() - DecoratorModel.TEXT_TOP, mPaint);
             }

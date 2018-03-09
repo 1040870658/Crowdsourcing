@@ -100,13 +100,13 @@ public class DecoratorModel {
         this.groupText = groupText;
         init(resources,datas);
     }
-    private void init(Resources resources, List<List> datas){
+    public void init(Resources resources, List<List> datas){
         this.datas = datas;
         this.groupNum = datas.size();
         this.resources = resources;
-        groupPositions = new ArrayList<Integer>(groupNum);
-        groupColor = new ArrayList<Integer>(groupNum);
-        groupTextColor = new ArrayList<Integer>(groupNum);
+        groupPositions = new ArrayList<>(groupNum);
+        groupColor = new ArrayList<>(groupNum);
+        groupTextColor = new ArrayList<>(groupNum);
         groupPositions.add(0);
         int totalPos = 0;
         for(int i = 0;i != groupNum;i ++){

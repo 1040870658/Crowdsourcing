@@ -298,12 +298,19 @@ public class FragmentService extends Fragment {
             double lngD = Double.valueOf(strings[1]);
             intent.putExtra(ShopActivity.SHOPLAT,latD);
             intent.putExtra(ShopActivity.SHOPLNG,lngD);
-            strings = destinationLatLng.split(",");
-            latD = Double.valueOf(strings[0]);
-            lngD = Double.valueOf(strings[1]);
+            if(destinationLatLng == null) {
+                strings = destinationLatLng.split(",");
+                latD = Double.valueOf(strings[0]);
+                lngD = Double.valueOf(strings[1]);
+            }
+            else {
+                latD = 0;
+                lngD = 0;
+            }
             intent.putExtra(ShopActivity.CUSLAT,latD);
             intent.putExtra(ShopActivity.CUSLNG,lngD);
             intent.putExtra(ShopActivity.CUSTOMERADD,originAddress);
+            intent.putExtra(ShopActivity.CUSID,MainActivity.userModel.getPhone());
             startActivity(intent);
         }
     }

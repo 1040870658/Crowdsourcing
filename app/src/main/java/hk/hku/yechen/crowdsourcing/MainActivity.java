@@ -2,6 +2,7 @@ package hk.hku.yechen.crowdsourcing;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.view.ViewPager;
@@ -24,7 +25,10 @@ import hk.hku.yechen.crowdsourcing.fragments.FragmentService;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentTask;
 import hk.hku.yechen.crowdsourcing.model.UserModel;
 import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.ResponseExtractor;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
+import hk.hku.yechen.crowdsourcing.util.LoginHandler;
+import hk.hku.yechen.crowdsourcing.util.UserHandler;
 
 /**
  * Created by yechen on 2017/11/20.
@@ -63,6 +67,8 @@ public class MainActivity extends FragmentActivity {
     public ExecutorService getExecutorService(){
         return executorService;
     }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,12 +104,15 @@ public class MainActivity extends FragmentActivity {
             }
         });
         if(userModel != null){
-            userText.setText(userModel.getUserName());
-            accountText.setText(String.valueOf(userModel.getProperty()));
-            creditText.setText(String.valueOf(userModel.getCredit()));
+            setUserInfo();
         }
     }
 
+    public void setUserInfo(){
+        userText.setText(userModel.getUserName());
+        accountText.setText(String.valueOf(userModel.getProperty()));
+        creditText.setText(String.valueOf(userModel.getCredit()));
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -111,6 +120,14 @@ public class MainActivity extends FragmentActivity {
         if(tabs != -1){
             fragmentTabHost.setCurrentTab(tabs);
         }
+        Handler handler = new UserHandler(this);
+        NetworkPresenter networkPresenter = new NetworkPresenter(
+                NetworkPresenter.LOGIN_SUCCESS,
+                NetworkPresenter.UrlBuilder.buildLogin(userModel.getPhone(),userModel.getPassword()),
+                null,
+                handler,
+                new ResponseExtractor.UserExtractor(handler));
+        new Thread(networkPresenter).start();
     }
 
     @Override

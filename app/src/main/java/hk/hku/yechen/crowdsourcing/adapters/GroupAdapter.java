@@ -18,14 +18,24 @@ public abstract class GroupAdapter extends BaseAdapter{
 
     public GroupAdapter(List<List> groups, Activity context){
         super();
+        this.context = context;
         this.groups = groups;
+        setData();
+    }
+
+    private void setData(){
+        datas = new ArrayList();
         groupPosition = new ArrayList<>();
         groupPosition.add(0);
         for(List group:groups){
             datas.addAll(group);
             groupPosition.add(datas.size());
         }
-        this.context = context;
+    }
+
+    public void notifyGroupsChanged(){
+        setData();
+        notifyDataSetChanged();
     }
 
     @Override

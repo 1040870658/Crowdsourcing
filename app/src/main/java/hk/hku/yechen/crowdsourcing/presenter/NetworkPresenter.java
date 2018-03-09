@@ -7,8 +7,10 @@ import android.util.ArrayMap;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import hk.hku.yechen.crowdsourcing.model.CommodityModel;
 import hk.hku.yechen.crowdsourcing.network.NetworkEngine;
 import hk.hku.yechen.crowdsourcing.util.Extractor;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
@@ -42,13 +44,14 @@ public class NetworkPresenter implements Runnable{
     //  private static String DESTINATION = "22.2831928,114.1381175";
     private static String BEGIN = "22.313297,114.170546";
     private static String DESTINATION = "22.283208,114.138175";
-    public static String ip_address = "147.8.104.73:8080";
+    public static String ip_address = "147.8.102.173:8080";
     public static final String LOGIN = "http://"+ip_address+"/user/login?";
     public static final String REGISTER = "http://"+ip_address+"/user/register?";
     public static final String RGEO_SEARCH = "https://maps.googleapis.com/maps/api/geocode/json?";
     public static final String ROUTE_SEARCH = "https://maps.googleapis.com/maps/api/directions/json?";
     public static final String SHOP_LIST = "http://"+ip_address+"/shop/list?";
     public static final String COMMODITY_IN_SHOP = "http://"+ip_address+"/commodity/singleshop?";
+    public static final String ORDERS_LOOKUP = "http://"+ip_address+"/order/lookup?";
     //        "origin=22.283257,114.136774&destination=22.2831928,114.1381175&sensor=true&mode=walking&key=AIzaSyCN8pCyzbH7sNTHpaeEA7Rg48nt49WoUOU";
     public static final String NEARBY_SEARCH =
             "https://maps.googleapis.com/maps/api/place/nearbysearch/json" +
@@ -57,6 +60,8 @@ public class NetworkPresenter implements Runnable{
     public static final String TEXT_SEARCH =
             "https://maps.googleapis.com/maps/api/place/textsearch/xml" +
                     "?query=starbucks+in+Hong+Kong&key=AIzaSyCN8pCyzbH7sNTHpaeEA7Rg48nt49WoUOU";
+
+    public static final String ORDER_LAUNCH = "http://"+ip_address+"/order/launch?";
 
     private int code = CODE;
     private int messageCode;
@@ -84,9 +89,6 @@ public class NetworkPresenter implements Runnable{
         this.listener = listener;
         this.messageCode = messageCode;
         this.handler = handler;
-        String[] a;
-        String[] b = new String[2];
-        a = b.clone();
     }
     public static class UrlBuilder{
         public static String buildRoute(String origin,String destination){
@@ -115,6 +117,27 @@ public class NetworkPresenter implements Runnable{
             return LOGIN + "userId="+phone+"&password="+password;
         }
 
+        public static String buildOrderLaunch(String customerPhone,
+                                              HashMap<CommodityModel,Integer> commMap,
+                                              String destination,
+                                              String desLatLng){
+            String url = ORDER_LAUNCH +"customerPhone="+customerPhone;
+
+            StringBuilder commodityIds = new StringBuilder();
+            boolean started = false;
+            for(HashMap.Entry<CommodityModel,Integer> entry:commMap.entrySet()){
+                if(started)
+                    commodityIds.append(",");
+                commodityIds.append(entry.getKey().getCommodityId());
+                commodityIds.append("x");
+                commodityIds.append(entry.getValue());
+                started = true;
+            }
+
+            url = url + "&commodityIds=" + commodityIds + "&destination=" + destination
+                    +"&desLatLng="+desLatLng;
+            return url;
+        }
         public static String buildRegister(String phone,String userName,String password,String idCard,String email){
             String url= REGISTER +"phone="+phone+
                     "&username="+userName+
@@ -133,6 +156,16 @@ public class NetworkPresenter implements Runnable{
 
         public static String buildCommodityInShop(long shopId,int offset,int count){
             return COMMODITY_IN_SHOP+"shopId="+shopId+"&offset="+offset+"&count="+count;
+        }
+
+        public static String buildOrdersLookup(String phone,int type){
+            if (type != 0 && type != 1)
+                type = 0;
+            String[] types = new String[2];
+            types[0] = "customer";
+            types[1] = "provider";
+            String url = ORDERS_LOOKUP + "userPhone="+phone+"&userType="+types[type];
+            return url;
         }
     }
     public static FormBody DefineBody(HashMap<String,String> hashMap){

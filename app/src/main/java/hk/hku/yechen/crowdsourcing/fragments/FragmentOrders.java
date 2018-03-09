@@ -1,8 +1,11 @@
 package hk.hku.yechen.crowdsourcing.fragments;
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,18 +16,24 @@ import android.widget.ImageView;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import hk.hku.yechen.crowdsourcing.MainActivity;
 import hk.hku.yechen.crowdsourcing.R;
 import hk.hku.yechen.crowdsourcing.adapters.OrderAdapter;
 import hk.hku.yechen.crowdsourcing.model.CommodityModel;
+import hk.hku.yechen.crowdsourcing.model.DecoratorModel;
 import hk.hku.yechen.crowdsourcing.model.OrderModel;
+import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
+import hk.hku.yechen.crowdsourcing.presenter.ResponseExtractor;
 import hk.hku.yechen.crowdsourcing.util.HoverListDecorator;
-import hk.hku.yechen.crowdsourcing.util.SimpleItemDecorator;
-
-import static android.support.v7.recyclerview.R.attr.layoutManager;
+import hk.hku.yechen.crowdsourcing.util.LevelLog;
+import hk.hku.yechen.crowdsourcing.util.LookupHandler;
 
 /**
  * Created by yechen on 2017/11/21.
@@ -37,14 +46,33 @@ public class FragmentOrders extends Fragment {
     private List<List> orders;
     private List<String> titles;
     private ImageView imageView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private LookupHandler lookupHandler;
+    public static final int LOOKUP_FINISHED = 0x01000001;
+    public static final int LOOKUP_FAILED = 0x01000002;
+    public static int CUSTOMER_TYPE = 0;
+    public static int PROVIDER_TYPE = 1;
+    private DecoratorModel decoratorModel;
+    private HoverListDecorator hoverListDecorator;
+    private ExecutorService executorService;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if(contentView == null){
             contentView = inflater.inflate(R.layout.fragment_task,container,false);
+            executorService = Executors.newSingleThreadExecutor();
+            swipeRefreshLayout = (SwipeRefreshLayout) contentView.findViewById(R.id.srl_orders);
+            swipeRefreshLayout.setColorSchemeColors(Color.BLUE,Color.CYAN,Color.GREEN);
             init();
+            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    getData();
+                }
+            });
             imageView = (ImageView) contentView.findViewById(R.id.iv_task_background);
             imageView.setImageResource(R.drawable.back_order);
+            orders = new ArrayList<>();
             adapter = new OrderAdapter(orders,getActivity());
             recyclerView = (RecyclerView) contentView.findViewById(R.id.rcv_task);
             recyclerView.setAdapter(adapter);
@@ -54,7 +82,10 @@ public class FragmentOrders extends Fragment {
                     layoutManager.getOrientation());
             recyclerView.addItemDecoration(dividerItemDecoration);
           //  recyclerView.addItemDecoration(new SimpleItemDecorator(getActivity(),SimpleItemDecorator.VERTICAL_LIST));
-            recyclerView.addItemDecoration(new HoverListDecorator(getResources(),orders,titles));
+            decoratorModel = new DecoratorModel(getResources(),orders,titles);
+            hoverListDecorator = new HoverListDecorator(decoratorModel);
+            recyclerView.addItemDecoration(hoverListDecorator);
+            lookupHandler = new LookupHandler(adapter,getActivity(),swipeRefreshLayout,decoratorModel);
         }
         return contentView;
     }
@@ -62,35 +93,22 @@ public class FragmentOrders extends Fragment {
         titles = new ArrayList<>();
         titles.add(getString(R.string.order_title_1));
         titles.add(getString(R.string.order_title_2));
-        orders = getData();
     }
-    public  List<List> getData(){
-        List tmp = new ArrayList();
-        List tmp2 = new ArrayList();
-        HashMap<CommodityModel,Integer> commodities;
-        commodities = new HashMap<>();
-        commodities.put(new CommodityModel(0,0,"Sausage Roll",10,1,33),1);
-        tmp2.add(new OrderModel(7,commodities,
-                new LatLng(22.282712,114.129371),new LatLng(22.2831920,114.1381181),
-                "香港石塘咀卑路乍街8号","香港大学图书馆",38.0));
-        tmp.add(tmp2);
 
-        commodities = new HashMap<>();
-        commodities.put(new CommodityModel(0,0,"Sausage Roll",10,1,55),1);
-        tmp2 = new ArrayList();
-        tmp2.add(new OrderModel(4,commodities,
-                new LatLng(22.283432,114.129269),
-                new LatLng(22.2831923,114.1381197),
-                "香港大角咀","香港大学智华馆",38.0));
-        tmp2.add(new OrderModel(4,commodities,
-                new LatLng(22.283432,114.129269),
-                new LatLng(22.2831923,114.1381197),
-                "香港大角咀","香港大学智华馆",38.0));
-        tmp2.add(new OrderModel(4,commodities,
-                new LatLng(22.283432,114.129269),
-                new LatLng(22.2831923,114.1381197),
-                "香港大角咀","香港大学智华馆",38.0));
-        tmp.add(tmp2);
-        return tmp;
+    @Override
+    public void onResume() {
+        super.onResume();
+        getData();
+    }
+
+    public void getData(){
+        NetworkPresenter networkPresenter = new NetworkPresenter(
+                LOOKUP_FINISHED,
+                NetworkPresenter.UrlBuilder.buildOrdersLookup(MainActivity.userModel.getPhone(),CUSTOMER_TYPE),
+                null,
+                lookupHandler,
+                new ResponseExtractor.OrderLookup(lookupHandler,orders));
+
+        executorService.submit(networkPresenter);
     }
 }

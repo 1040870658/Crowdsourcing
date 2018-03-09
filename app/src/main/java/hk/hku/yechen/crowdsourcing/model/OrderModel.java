@@ -18,7 +18,8 @@ import java.util.List;
 public class OrderModel implements Parcelable{
 
     private final int LIMIT = 50;
-
+    private String customerPhone;
+    private String providerPhone;
     private String shopAdd;
     private String targetAdd;
     private double startLat;
@@ -30,6 +31,19 @@ public class OrderModel implements Parcelable{
     private int id;
     private double price;
     private double tips;
+
+    public static int LAUNCHED = 1;
+
+    public static int PICKED = 2;
+
+    public static int COLLECTED = 3;
+
+    public static int ARRIVED = 4;
+
+    public static int FINISHED = 5;
+
+    private int state = LAUNCHED;
+
     private HashMap<CommodityModel,Integer> commodities;
 
     public void setPrice(double price){
@@ -38,6 +52,11 @@ public class OrderModel implements Parcelable{
         if(tips > LIMIT)
             tips = LIMIT;
     }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
     public double getTips(){
         return tips;
     }
@@ -58,6 +77,8 @@ public class OrderModel implements Parcelable{
     protected OrderModel(Parcel in) {
         this.id = in.readInt();
         readHashMap(in);
+        this.customerPhone = in.readString();
+        this.providerPhone = in.readString();
         this.shopAdd = in.readString();
         this.targetAdd = in.readString();
         this.startLat = in.readDouble();
@@ -77,10 +98,12 @@ public class OrderModel implements Parcelable{
     }
 
 
-    public OrderModel(int id, HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
+    public OrderModel(int id, String customerPhone,HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
                       String shopAdd,String targetAdd){
         this.id = id;
         this.commodities = commodities;
+        this.customerPhone = customerPhone;
+        this.providerPhone = "0";
         this.start = start;
         this.end = end;
         this.startLng = start.longitude;
@@ -90,9 +113,27 @@ public class OrderModel implements Parcelable{
         this.targetAdd = targetAdd;
         this.shopAdd = shopAdd;
     }
-    public OrderModel(int id, HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
+    public OrderModel(int id, String customerPhone,String providerPhone,HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
                       String shopAdd,String targetAdd,double price){
         this.id = id;
+        this.commodities = commodities;
+        this.customerPhone = customerPhone;
+        this.providerPhone = providerPhone;
+        this.start = start;
+        this.end = end;
+        this.startLng = start.longitude;
+        this.startLat = start.latitude;
+        this.endLat = end.latitude;
+        this.endLng = end.longitude;
+        this.targetAdd = targetAdd;
+        this.shopAdd = shopAdd;
+        this.price = price;
+    }
+    public OrderModel(int id, String customerPhone,HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
+                      String shopAdd,String targetAdd,double price){
+        this.id = id;
+        this.customerPhone = customerPhone;
+        this.providerPhone = "0";
         this.commodities = commodities;
         this.start = start;
         this.end = end;
@@ -104,6 +145,7 @@ public class OrderModel implements Parcelable{
         this.shopAdd = shopAdd;
         setPrice(price);
     }
+
 
     public void setShopAdd(String shopAdd) {
         this.shopAdd = shopAdd;
@@ -135,6 +177,14 @@ public class OrderModel implements Parcelable{
 
     public double getEndLng() {
         return endLng;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
     }
 
     public int getId() {
@@ -178,6 +228,8 @@ public class OrderModel implements Parcelable{
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(id);
         writeHashMap(dest,flags);
+        dest.writeString(customerPhone);
+        dest.writeString(providerPhone);
         dest.writeString(shopAdd);
         dest.writeString(targetAdd);
         dest.writeDouble(startLat);
@@ -186,4 +238,13 @@ public class OrderModel implements Parcelable{
         dest.writeDouble(endLng);
         dest.writeDouble(price);
     }
+
+    public void setProviderPhone(String providerPhone){
+        this.providerPhone = providerPhone;
+    }
+
+    public String getProviderPhone() {
+        return providerPhone;
+    }
+
 }

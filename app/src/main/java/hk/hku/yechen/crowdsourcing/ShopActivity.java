@@ -70,6 +70,7 @@ public class ShopActivity extends Activity {
     private double shopLng;
     private double cusLng;
     private double price;
+    private String customerPhone;
     private int itemNum = 0;
     private ShopsModel shopsModel;
     private ExecutorService executorService;
@@ -81,6 +82,7 @@ public class ShopActivity extends Activity {
     public static final String CUSLAT = "CUSLAT";
     public static final String CUSLNG = "CUSLNG";
     public static final String SHOP = "SHOP";
+    public static final String CUSID="CUSID";
     private int offset = 0;
     private int num = COUNT;
     private static final int COUNT = 10;
@@ -151,7 +153,7 @@ public class ShopActivity extends Activity {
                 }
                 submit();
                 //TODO: trans orderModel to OrderActivity
-                OrderModel orderModel = new OrderModel(0,commodities,
+                OrderModel orderModel = new OrderModel(0,customerPhone,commodities,
                         new LatLng(shopLat,shopLng),new LatLng(cusLat,cusLng),
                         shopsModel.getPysicalAdd(),cusADD);
                 orderModel.setPrice(price);
@@ -196,7 +198,7 @@ public class ShopActivity extends Activity {
                             itemNumTextView.setText(String.valueOf(itemNum));
                             commodities.put(data,itemNum);
                             price += data.getPrice();
-                            priceView.setText("$"+price);
+                            priceView.setText(String.valueOf("$"+price));
                         }
                     }
                 },R.id.ib_add);
@@ -213,7 +215,7 @@ public class ShopActivity extends Activity {
                             else
                                 commodities.put(data,itemNum);
                             price -= data.getPrice();
-                            priceView.setText("$"+price);
+                            priceView.setText(String.valueOf("$"+price));
                         }
                     }
                 },R.id.ib_minus);
@@ -282,6 +284,7 @@ public class ShopActivity extends Activity {
         shopLng = intent.getDoubleExtra(SHOPLNG,0.0);
         cusLat = intent.getDoubleExtra(CUSLAT,0.0);
         cusLng = intent.getDoubleExtra(CUSLNG,0.0);
+        customerPhone = intent.getStringExtra(CUSID);
     }
     public void GoBack(View view){
         finish();
