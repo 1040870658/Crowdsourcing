@@ -55,12 +55,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Jhceshop"
             android:id="@+id/tv_process_shop"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Alex"
             android:layout_centerHorizontal="true"
             android:layout_marginRight="5dp"
             android:id="@+id/tv_name"/>
@@ -77,15 +75,8 @@
             android:layout_height="wrap_content"
             android:textColor="@color/green"
             android:layout_alignParentRight="true"
-            android:text="$8"
             android:id="@+id/tv_reward"
             android:layout_marginRight="@dimen/small_h_gap"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Reward:"
-            android:layout_toLeftOf="@id/tv_reward"
             />
     </RelativeLayout>
 

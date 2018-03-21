@@ -13,6 +13,7 @@ import java.util.List;
 import hk.hku.yechen.crowdsourcing.adapters.GroupAdapter;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentOrders;
 import hk.hku.yechen.crowdsourcing.model.DecoratorModel;
+import hk.hku.yechen.crowdsourcing.model.OrderModel;
 
 /**
  * Created by yechen on 2018/3/9.

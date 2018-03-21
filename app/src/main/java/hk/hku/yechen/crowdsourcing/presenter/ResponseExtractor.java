@@ -136,7 +136,7 @@ public class ResponseExtractor implements Extractor {
                         data.getString("userName"),
                         data.getString("passWord"),
                         data.getString("email"),
-                        data.getInt("credit"),
+                        Float.valueOf(data.getString("credit")),
                         data.getDouble("property"));
                 Message message = new Message();
                 message.obj = userModel;
@@ -295,18 +295,9 @@ public class ResponseExtractor implements Extractor {
         }
         @Override
         public void extract(Response response, int messageCode){
-            JSONObject jsonObject;
-            JSONObject itemObject;
             JSONArray jsonArray;
-            JSONArray itemArray;
-            JSONArray numberArray;
-            LatLng start;
-            LatLng end;
-            List<Integer> numbers;
             List<OrderModel> finished;
             List<OrderModel> inProcess;
-            HashMap<CommodityModel,Integer> commodityModelIntegerHashMap;
-            CommodityModel commodityModel;
 
             if(response != null){
                 ResponseBody body = response.body();
@@ -319,48 +310,8 @@ public class ResponseExtractor implements Extractor {
                             finished = new ArrayList<>();
                             inProcess = new ArrayList<>();
                             for (int i = 0; i < jsonArray.length(); i++) {
-                                jsonObject = jsonArray.getJSONObject(i).getJSONObject("order");
-                                itemArray = jsonArray.getJSONObject(i).getJSONArray("commodityList");
-                                commodityModelIntegerHashMap = new HashMap<>();
-                                numbers = new ArrayList<>();
-                                numberArray = jsonArray.getJSONObject(i).getJSONArray("numbers");
-
-                                if (numberArray != null) {
-                                    for (int j = 0; j != numberArray.length(); j++) {
-                                        numbers.add(numberArray.getInt(j));
-                                    }
-                                }
-
-                                if (itemArray != null) {
-                                    for (int j = 0; j != itemArray.length(); j++) {
-                                        itemObject = itemArray.getJSONObject(j);
-                                        commodityModel = new CommodityModel(
-                                                itemObject.getLong("commodityID"),
-                                                itemObject.getLong("shopID"),
-                                                itemObject.getString("commodityName"),
-                                                itemObject.getDouble("commodityPrice"),
-                                                itemObject.getString("image"),
-                                                itemObject.getInt("commodityStock"));
-                                        commodityModelIntegerHashMap.put(commodityModel, numbers.get(j));
-                                    }
-                                }
-
-                                start = transferString2LatLng(jsonObject.getString("shopLatLng"));
-                                end = transferString2LatLng(jsonObject.getString("desLatLng"));
-                                OrderModel orderModel = new OrderModel(
-                                        jsonObject.getInt("orderId"),
-                                        jsonObject.getString("customerPhone"),
-                                        jsonObject.getString("providerPhone"),
-                                        commodityModelIntegerHashMap,
-                                        start,
-                                        end,
-                                        jsonObject.getString("shopAddress"),
-                                        jsonObject.getString("destination"),
-                                        jsonObject.getDouble("price")
-                                );
-                                int status = jsonObject.getInt("status");
-                                orderModel.setState(status);
-                                if (status == OrderModel.FINISHED) {
+                                OrderModel orderModel = extractOrder(jsonArray.getJSONObject(i));
+                                if (orderModel.getState() == OrderModel.FINISHED) {
                                     finished.add(orderModel);
                                 } else {
                                     inProcess.add(orderModel);
@@ -373,6 +324,145 @@ public class ResponseExtractor implements Extractor {
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    public static OrderModel extractOrder(JSONObject outerJson) throws Exception{
+        JSONArray itemArray;
+        JSONArray numberArray;
+        LatLng start;
+        LatLng end;
+        JSONObject jsonObject;
+        JSONObject itemObject;
+        List<Integer> numbers;
+        HashMap<CommodityModel,Integer> commodityModelIntegerHashMap;
+        CommodityModel commodityModel;
+
+        jsonObject = outerJson.getJSONObject("order");
+        itemArray = outerJson.getJSONArray("commodityList");
+        commodityModelIntegerHashMap = new HashMap<>();
+        numbers = new ArrayList<>();
+        numberArray = outerJson.getJSONArray("numbers");
+
+        if (numberArray != null) {
+            for (int j = 0; j != numberArray.length(); j++) {
+                numbers.add(numberArray.getInt(j));
+            }
+        }
+
+        if (itemArray != null) {
+            for (int j = 0; j != itemArray.length(); j++) {
+                itemObject = itemArray.getJSONObject(j);
+                commodityModel = new CommodityModel(
+                        itemObject.getLong("commodityID"),
+                        itemObject.getLong("shopID"),
+                        itemObject.getString("commodityName"),
+                        itemObject.getDouble("commodityPrice"),
+                        itemObject.getString("image"),
+                        itemObject.getInt("commodityStock"));
+                commodityModelIntegerHashMap.put(commodityModel, numbers.get(j));
+            }
+        }
+
+        start = transferString2LatLng(jsonObject.getString("shopLatLng"));
+        end = transferString2LatLng(jsonObject.getString("desLatLng"));
+        OrderModel orderModel = new OrderModel(
+                jsonObject.getInt("orderId"),
+                jsonObject.getString("customerPhone"),
+                jsonObject.getString("providerPhone"),
+                commodityModelIntegerHashMap,
+                start,
+                end,
+                jsonObject.getString("shopAddress"),
+                jsonObject.getString("destination"),
+                jsonObject.getDouble("price"),
+                outerJson.getString("providerName"),
+                outerJson.getString("customerName"),
+                outerJson.getString("shopName"),
+                (float)jsonObject.getDouble("credit")
+        );
+        int status = jsonObject.getInt("status");
+        orderModel.setState(status);
+        return orderModel;
+
+    }
+    public static class RecommendExtractor implements Extractor{
+
+        private Handler handler;
+        private List<DestinationModel> destinationModels;
+
+        public RecommendExtractor(Handler handler,List<DestinationModel> destinationModels){
+            this.handler = handler;
+            this.destinationModels = destinationModels;
+        }
+
+        @Override
+        public void extract(Response response, int messageCode) {
+
+            if(response != null){
+                ResponseBody responseBody = response.body();
+                if(responseBody != null){
+                    try {
+                        JSONObject jsonObject;
+                        JSONArray jsonArray;
+                        OrderModel orderModel;
+
+                        jsonArray = new JSONArray(responseBody.string());
+                        destinationModels.clear();
+                        for(int i = 0;i < jsonArray.length();i ++){
+                            jsonObject = jsonArray.getJSONObject(i);
+                            orderModel = extractOrder(jsonObject.getJSONObject("order"));
+                            long timeCost = jsonObject.getLong("timeCost");
+                            String distance = jsonObject.getString("distance");
+                            String shopName = jsonObject.getString("shopName");
+                            String image = jsonObject.getString("image");
+                            destinationModels.add(new DestinationModel(
+                                    timeCost,
+                                    orderModel.getTips(),
+                                    shopName,
+                                    image,
+                                    distance,
+                                    orderModel));
+                        }
+                        handler.sendEmptyMessage(messageCode);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    public static class UpdateOrderStatusExtractor implements Extractor{
+
+        private Handler handler;
+
+        public UpdateOrderStatusExtractor(Handler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void extract(Response response, int messageCode) {
+
+            if(response != null){
+                ResponseBody responseBody = response.body();
+                if(responseBody != null){
+                    try {
+                        if(responseBody.string().equals("true"))
+                            handler.sendEmptyMessageDelayed(messageCode,2000);
+                        else
+                            handler.sendEmptyMessageDelayed(NetworkPresenter.H_FAIL,2000);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

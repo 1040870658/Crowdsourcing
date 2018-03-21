@@ -1,33 +1,35 @@
 package hk.hku.yechen.crowdsourcing;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TabWidget;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.model.LatLng;
+
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import hk.hku.yechen.crowdsourcing.fragments.FragmentMain;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentOrders;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentService;
 import hk.hku.yechen.crowdsourcing.fragments.FragmentTask;
 import hk.hku.yechen.crowdsourcing.model.UserModel;
+import hk.hku.yechen.crowdsourcing.presenter.LocationPresenter;
 import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
 import hk.hku.yechen.crowdsourcing.presenter.ResponseExtractor;
-import hk.hku.yechen.crowdsourcing.util.LevelLog;
-import hk.hku.yechen.crowdsourcing.util.LoginHandler;
 import hk.hku.yechen.crowdsourcing.util.UserHandler;
 
 /**
@@ -36,19 +38,25 @@ import hk.hku.yechen.crowdsourcing.util.UserHandler;
 
 public class MainActivity extends FragmentActivity {
 
+    private LocationPresenter locationPresenter;
+    private SharedPreferences sharedPreferences;
     public ExecutorService executorService = Executors.newCachedThreadPool();
     public ExecutorService fixService = Executors.newFixedThreadPool(2);
     private FragmentTabHost fragmentTabHost;
     private DrawerLayout drawerLayout;
     private RelativeLayout drawerSetting;
-    private String origin;
-    private String destination;
-    private NetworkPresenter networkPresenter;
     public static UserModel userModel;
     private TextView userText;
     private TextView accountText;
     private TextView creditText;
     private TextView loginState;
+    protected String originLatLng;
+    protected String destinationLatLng;
+    protected String originAddress;
+    protected String destinationAddress;
+    protected LatLng currentLatLng;
+    protected String currentAddress;
+
     public static final String shared_table = "UserInfo";
     public static final String shared_originLatLng = "originLatLng";
     public static final String shared_desLatLng = "desLatLng";
@@ -69,6 +77,41 @@ public class MainActivity extends FragmentActivity {
     }
 
 
+    public void setOriginLatLng(String originLatLng) {
+        this.originLatLng = originLatLng;
+    }
+
+    public void setDestinationAddress(String destinationAddress) {
+        this.destinationAddress = destinationAddress;
+    }
+
+    public String getOriginLatLng() {
+        return originLatLng;
+    }
+
+    public String getDestinationLatLng() {
+        return destinationLatLng;
+    }
+
+    public String getOriginAddress() {
+        return originAddress;
+    }
+
+    public String getDestinationAddress() {
+        return destinationAddress;
+    }
+
+    public void setDestinationLatLng(String destinationLatLng) {
+        this.destinationLatLng = destinationLatLng;
+    }
+
+    public void setOriginAddress(String originAddress) {
+        this.originAddress = originAddress;
+    }
+
+    public LocationPresenter getLocationPresenter(){
+        return locationPresenter;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,12 +143,16 @@ public class MainActivity extends FragmentActivity {
                 Intent intent = new Intent(MainActivity.this,LoginActivity.class);
                 startActivity(intent);
                 userModel = null;
+                locationPresenter.ReleaseLocationService();
                 finish();
             }
         });
         if(userModel != null){
             setUserInfo();
         }
+        readUserInfo();
+        locationPresenter = new LocationPresenter(this,new MyLocationListener(this));
+       // currentLatLng = locationPresenter.getCurrentLatLng();
     }
 
     public void setUserInfo(){
@@ -116,9 +163,11 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        currentLatLng = locationPresenter.getCurrentLatLng();
         int tabs = getIntent().getIntExtra("tabs",-1);
         if(tabs != -1){
             fragmentTabHost.setCurrentTab(tabs);
+            getIntent().putExtra("tabs",-1);
         }
         Handler handler = new UserHandler(this);
         NetworkPresenter networkPresenter = new NetworkPresenter(
@@ -128,6 +177,12 @@ public class MainActivity extends FragmentActivity {
                 handler,
                 new ResponseExtractor.UserExtractor(handler));
         new Thread(networkPresenter).start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationPresenter.ReleaseLocationService();
     }
 
     @Override
@@ -158,4 +213,73 @@ public class MainActivity extends FragmentActivity {
     public FragmentTabHost getFragmentTabHost(){
        return fragmentTabHost;
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        writeUserInfo();
+    }
+    private void writeUserInfo(){
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(MainActivity.shared_originLatLng,originLatLng);
+        editor.putString(MainActivity.shared_desLatLng,destinationLatLng);
+        editor.putString(MainActivity.shared_originAddress,originAddress);
+        editor.putString(MainActivity.shared_desAddress,destinationAddress);
+        editor.apply();
+    }
+
+    private static class MyLocationListener implements LocationListener{
+
+        private WeakReference<MainActivity> activityWeakReference;
+        public MyLocationListener(MainActivity activity){
+            this.activityWeakReference = new WeakReference<>(activity);
+        }
+        @Override
+        public void onLocationChanged(Location location) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            activityWeakReference.get().setCurrentLatLng( new LatLng(latitude,longitude));
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    }
+
+    public void setCurrentLatLng(LatLng currentLatLng) {
+        this.currentLatLng = currentLatLng;
+    }
+
+
+    public void setCurrentAddress(String currentAddress) {
+        this.currentAddress = currentAddress;
+    }
+
+    public String getCurrentAddress() {
+        return currentAddress;
+    }
+
+    public LatLng getCurrentLatLng() {
+        return currentLatLng;
+    }
+
+    private void readUserInfo(){
+        sharedPreferences = getSharedPreferences(MainActivity.shared_table, Context.MODE_PRIVATE);
+        setOriginLatLng(sharedPreferences.getString(MainActivity.shared_originLatLng,null));
+        setDestinationLatLng(sharedPreferences.getString(MainActivity.shared_desLatLng,null));
+        setOriginAddress(sharedPreferences.getString(MainActivity.shared_originAddress,null));
+        setDestinationAddress(sharedPreferences.getString(MainActivity.shared_desAddress,null));
+    };
 }

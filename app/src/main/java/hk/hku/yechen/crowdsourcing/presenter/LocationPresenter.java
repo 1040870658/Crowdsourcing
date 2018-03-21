@@ -16,6 +16,9 @@ import android.util.Log;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.lang.ref.WeakReference;
+import java.util.concurrent.TimeUnit;
+
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 /**
@@ -24,9 +27,28 @@ import hk.hku.yechen.crowdsourcing.util.LevelLog;
 
 public class LocationPresenter {
 
-    public static boolean PermissionGranted = true;
+    public  LocationManager locationManager;
+    private LocationListener locationListener;
+    private WeakReference<Activity> activityWeakReference;
+    public  boolean PermissionGranted = true;
+    public LocationPresenter(Activity activity,LocationListener locationListener){
+        this.activityWeakReference = new WeakReference<Activity>(activity);
+        this.locationListener = locationListener;
+    }
+    public static String LatLng2String(LatLng latLng){
+        if(latLng == null)
+            return null;
+        return latLng.latitude+","+latLng.longitude;
+    }
+
+    public static LatLng String2LatLng(String latLngString){
+        if (latLngString == null)
+            return null;
+        String[] res = latLngString.split(",");
+        return new LatLng(Double.valueOf(res[0]),Double.valueOf(res[1]));
+    }
     @TargetApi(Build.VERSION_CODES.M)
-    private static boolean checkPermission(Activity context){
+    private  boolean  checkPermission(Activity context){
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -37,14 +59,16 @@ public class LocationPresenter {
         LevelLog.log(LevelLog.ERROR,"Location Presenter","Permission Granted");
         return true;
     }
-    public static LatLng getCurrentLatLng(Activity context) {
+    public  LatLng getCurrentLatLng() {
         LatLng latLng = null;
         double latitude = 0.0;
         double longitude = 0.0;
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if(activityWeakReference.get() == null)
+            return new LatLng(latitude,longitude);
+        locationManager = (LocationManager) activityWeakReference.get().getSystemService(Context.LOCATION_SERVICE);
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             LevelLog.log(LevelLog.ERROR,"Location Presenter","Gps Enabled");
-            if(!checkPermission(context)){
+            if(!checkPermission(activityWeakReference.get())){
                 return null;
             }
             LevelLog.log(LevelLog.ERROR,"Location Presenter","Now requesting Location from GPS_PROVIDER");
@@ -62,39 +86,44 @@ public class LocationPresenter {
             else{
                 LevelLog.log(LevelLog.ERROR,"Location Presenter","Request Failed");
             }
-            LocationListener locationListener = new LocationListener() {
 
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle arg2) {
-
-                }
-
-                @Override
-                public void onProviderEnabled(String provider) {
-
-                }
-
-                @Override
-                public void onProviderDisabled(String provider) {
-
-                }
-
-                @Override
-                public void onLocationChanged(Location location) {
-                    LevelLog.log(LevelLog.ERROR,"Located successfully------->","location------>" + "latitude：" + location.getLatitude() + "\nlongtitude:" + location.getAltitude());
-                }
-            };
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 1, locationListener);
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    TimeUnit.MINUTES.toMillis(100),
+                    100,
+                    locationListener);
 
         }
 
         return latLng;
     }
-    public static LatLng getCurrentLatLng(Activity context, GoogleMap mMap) {
+    private static class MyLocationListener implements LocationListener {
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle arg2) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            LevelLog.log(LevelLog.ERROR,"Located successfully------->","location------>" + "latitude：" + location.getLatitude() + "\nlongtitude:" + location.getAltitude());
+        }
+    }
+    public  LatLng getCurrentLatLng(Activity context, GoogleMap mMap) {
         LatLng latLng = null;
         double latitude = 0.0;
         double longitude = 0.0;
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             LevelLog.log(LevelLog.ERROR,"Location Presenter","Gps Enabled");
             if(!checkPermission(context)){
@@ -109,5 +138,10 @@ public class LocationPresenter {
             }
         }
         return latLng;
+    }
+    public void ReleaseLocationService(){
+        if(locationManager != null) {
+            locationManager.removeUpdates(locationListener);
+        }
     }
 }

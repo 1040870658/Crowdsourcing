@@ -3,12 +3,16 @@ package hk.hku.yechen.crowdsourcing.presenter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,14 +30,45 @@ public class RecommendPresenter implements RecommendIPresenter,Runnable {
     private WeakReference<RecommendView> viewWeakReference;
     private PolylineOptions polylineOptions;
     private Handler handler;
-    public RecommendPresenter(RecommendView recommendView, PolylineOptions polylineOptions){
-        this.viewWeakReference = new WeakReference<RecommendView>(recommendView);
+    private List<DestinationModel> destinationModels;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    public static final int RECOMMEND_FINISHED = 0x00000001;
+    private RecyclerView.Adapter adapter;
+    public RecommendPresenter(RecommendView recommendView,
+                              PolylineOptions polylineOptions,
+                              final RecyclerView.Adapter adapter,
+                              final SwipeRefreshLayout swipeRefreshLayout,
+                              List<DestinationModel> destinationModels){
+        this.viewWeakReference = new WeakReference<>(recommendView);
         this.polylineOptions = polylineOptions;
+        this.destinationModels = destinationModels;
+        this.adapter = adapter;
+        this.swipeRefreshLayout = swipeRefreshLayout;
 
-        handler = new Handler(Looper.getMainLooper());
+        handler = new Handler(Looper.getMainLooper()){
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what){
+                    case RECOMMEND_FINISHED:
+                        adapter.notifyDataSetChanged();
+                        swipeRefreshLayout.setRefreshing(false);
+                        break;
+                    default:
+                        swipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        };
     }
     @Override
-    public void recommend() {
+    public void recommend(String src, String des) {
+        NetworkPresenter networkPresenter = new NetworkPresenter(
+                RECOMMEND_FINISHED,
+                NetworkPresenter.UrlBuilder.buildRecommend(src,des),
+                null,
+                handler,
+                new ResponseExtractor.RecommendExtractor(handler,destinationModels)
+        );
+        new Thread(networkPresenter).start();
         polylineOptions.add(new LatLng(22.283257,114.136774));
         polylineOptions.add(new LatLng(22.283208,114.138175));
         if(viewWeakReference.get() != null){
@@ -50,9 +85,16 @@ public class RecommendPresenter implements RecommendIPresenter,Runnable {
         if(viewWeakReference.get() !=null)
             viewWeakReference.get().onMapInitialFinished();
     }
-    public void run(){
-        recommend();
+    public void setAdapter(RecyclerView.Adapter adapter){
+        this.adapter = adapter;
     }
+    public void run(){
+//        recommend(adapter);
+    }
+    public void fetchRecommendOrders(){
+
+    }
+
     public void test(List<DestinationModel> datas){
         double[] earnMoney = new double[3];
         HashMap<CommodityModel,Integer> commodities;

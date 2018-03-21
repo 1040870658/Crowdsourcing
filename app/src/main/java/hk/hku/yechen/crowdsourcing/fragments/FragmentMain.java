@@ -1,11 +1,8 @@
 package hk.hku.yechen.crowdsourcing.fragments;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -14,7 +11,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTabHost;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,13 +24,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
@@ -42,21 +36,18 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import hk.hku.yechen.crowdsourcing.MainActivity;
 import hk.hku.yechen.crowdsourcing.OrderDetailActivity;
+import hk.hku.yechen.crowdsourcing.OrderPickActivity;
 import hk.hku.yechen.crowdsourcing.adapters.BaseAdapter;
 import hk.hku.yechen.crowdsourcing.model.DestinationModel;
 import hk.hku.yechen.crowdsourcing.myviews.RecommendView;
@@ -68,9 +59,6 @@ import hk.hku.yechen.crowdsourcing.presenter.RecommendPresenter;
 import hk.hku.yechen.crowdsourcing.presenter.ResponseExtractor;
 import hk.hku.yechen.crowdsourcing.util.Extractor;
 import hk.hku.yechen.crowdsourcing.util.LevelLog;
-import hk.hku.yechen.crowdsourcing.util.SimpleItemDecorator;
-import hk.hku.yechen.crowdsourcing.util.WaypointsTarget;
-import okhttp3.Response;
 
 
 /**
@@ -80,6 +68,7 @@ import okhttp3.Response;
 public class FragmentMain extends Fragment implements OnMapReadyCallback,RecommendView{
     private MainActivity activity;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private PopupWindow popupWindow;
     private DisplayMetrics displayMetrics;
     private View contentView;
@@ -98,7 +87,6 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     private PlaceSelectionListener placeSelectionListener;
     private PlaceSelectionListener oPlaceSelectionListener;
     private PlaceSelectionListener dPlaceSelectionListener;
-    private SharedPreferences sharedPreferences;
     private ImageView sOriginImageView;
     private TextView  sOriginTextView;
     private ImageView sDesImageView;
@@ -107,13 +95,10 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     private ImageView lOriginImageView;
     private ImageView lDesImageView;
     private EditText searchEditText;
-    String originLatLng;
-    String destinationLatLng;
-    String originAddress;
-    String destinationAddress;
     ArrayList<MarkerOptions> wayPointsMarkers;
     MarkerOptions originMarker;
     MarkerOptions desMarker;
+    private LocationPresenter locationPresenter;
     int orange;
     int green;
     int polyWidth = 5;
@@ -149,9 +134,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             originMarker = new MarkerOptions();
             desMarker = new MarkerOptions();
             desMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-            recommendIPresenter = new RecommendPresenter(this,polylineOptions);
             datas = new ArrayList<>();
-//          recommendIPresenter.recommend();
+            baseAdapter = new RecommendAdapter(datas);
             popView = contentView.findViewById(R.id.ll_pop);
             popView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -162,6 +146,9 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
             initializeMap();
             selectDes();
+            recommendIPresenter = new RecommendPresenter(this,polylineOptions,baseAdapter,swipeRefreshLayout,datas);
+            recyclerView.setAdapter(baseAdapter);
+            recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(),linearLayoutManager.getOrientation()));
 
             cancelSearch = (ImageView) contentView.findViewById(R.id.iv_cancelSearch);
             cancelSearch.setOnClickListener(new View.OnClickListener() {
@@ -177,8 +164,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
                 @Override
                 public void onPlaceSelected(Place place) {
                     sOriginTextView.setText(place.getAddress());
-                    originLatLng = place.getLatLng().latitude + "," + place.getLatLng().longitude;
-                    originAddress = place.getAddress().toString();
+                    activity.setOriginLatLng( place.getLatLng().latitude + "," + place.getLatLng().longitude);
+                    activity.setOriginAddress(place.getAddress().toString());
                     searchHidden.setVisibility(View.GONE);
                     cancelSearch.setVisibility(View.GONE);
                     if(popupView != null)
@@ -196,8 +183,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
                 @Override
                 public void onPlaceSelected(Place place) {
                     sDesTextView.setText(place.getAddress());
-                    destinationLatLng = place.getLatLng().latitude +"," +place.getLatLng().longitude;
-                    destinationAddress = place.getAddress().toString();
+                    activity.setDestinationLatLng(place.getLatLng().latitude +"," +place.getLatLng().longitude);
+                    activity.setDestinationAddress(place.getAddress().toString());
                     searchHidden.setVisibility(View.GONE);
                     cancelSearch.setVisibility(View.GONE);
                     if(popupView != null)
@@ -213,7 +200,7 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
             cancelSearch.setVisibility(View.GONE);
             placeSelectionListener = oPlaceSelectionListener;
-            recommendIPresenter.initialMap(datas);
+          //  recommendIPresenter.initialMap(datas);
         }
         searchFragment.onCreateView(inflater,container,null);
         return contentView;
@@ -239,6 +226,9 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     }
     @Override
     public void onResume() {
+        if(activity.getOriginLatLng() != null && activity.getDestinationLatLng() != null) {
+            recommendIPresenter.recommend(activity.getOriginLatLng(), activity.getDestinationLatLng());
+        }
         popupWindow.showAtLocation(contentView, Gravity.BOTTOM|Gravity.CENTER,0,0);
         super.onResume();
     }
@@ -247,14 +237,14 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        if(originLatLng != null && destinationLatLng != null){
-            String[] strings = originLatLng.split(",");
+        if(activity.getOriginLatLng() != null && activity.getDestinationLatLng() != null){
+            String[] strings = activity.getOriginLatLng().split(",");
             double latD = Double.valueOf(strings[0]);
             double lngD = Double.valueOf(strings[1]);
             LatLng latLng = new LatLng(latD,lngD);
             directPoly.add(latLng);
             originMarker.position(latLng);
-            strings = destinationLatLng.split(",");
+            strings = activity.getDestinationLatLng().split(",");
             latD = Double.valueOf(strings[0]);
             lngD = Double.valueOf(strings[1]);
             latLng = new LatLng(latD,lngD);
@@ -286,8 +276,8 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
         mMap.getUiSettings().setScrollGesturesEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
-        if(originLatLng != null) {
-            String[] strings = originLatLng.split(",");
+        if(activity.getOriginLatLng() != null) {
+            String[] strings = activity.getOriginLatLng().split(",");
             double latD = Double.valueOf(strings[0]);
             double lngD = Double.valueOf(strings[1]);
             move(new LatLng(latD,lngD));
@@ -299,17 +289,18 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         activity = (MainActivity) getActivity();
-        activity.getExecutorService().submit(recommendIPresenter);
+        locationPresenter = activity.getLocationPresenter();
+      //  activity.getExecutorService().submit(recommendIPresenter);
 
-        readUserInfo();
-
-        if(originAddress != null){
-            sOriginTextView.setText(originAddress);
+        if(activity.getOriginAddress() != null){
+            sOriginTextView.setText(activity.getOriginAddress());
         }
-        if(destinationAddress != null){
-            sDesTextView.setText(destinationAddress);
+        if(activity.getDestinationAddress() != null){
+            sDesTextView.setText(activity.getDestinationAddress());
         }
     }
+
+
 
     private Handler handler = new Handler(){
         @Override
@@ -347,13 +338,13 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
 
             else if(msg.what == ORIGIN_REVERSE_CODE){
-                originAddress = (String) msg.obj;
-                sOriginTextView.setText(originAddress);
+                activity.setOriginAddress((String) msg.obj);
+                sOriginTextView.setText(activity.getOriginAddress());
             }
 
             else if(msg.what == DES_REVERSE_CODE){
-                destinationAddress = (String) msg.obj;
-                sDesTextView.setText(destinationAddress);
+                activity.setDestinationAddress((String) msg.obj);
+                sDesTextView.setText(activity.getDestinationAddress());
             }
 
             else{
@@ -429,15 +420,16 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             View.OnClickListener loLocateListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    LatLng latLng = LocationPresenter.getCurrentLatLng(getActivity());
+                    //LatLng latLng = locationPresenter.getCurrentLatLng();
+                    LatLng latLng = activity.getCurrentLatLng();
                     if(latLng == null) {
                         Toast.makeText(activity,"Something wrong with GPS, Try again Later",Toast.LENGTH_LONG).show();
                         return;
                     }
-                    originLatLng = latLng.latitude + "," + latLng.longitude;
+                    activity.setOriginLatLng(latLng.latitude + "," + latLng.longitude);
                     NetworkPresenter networkPresenter = new NetworkPresenter
                             (ORIGIN_REVERSE_CODE,NetworkPresenter.UrlBuilder.buildRGEO(
-                                    originLatLng)
+                                    activity.getOriginLatLng())
                                     , null, handler,ResponseExtractor.BuildReverseGeoExtractor(handler));
                     activity.getExecutorService().submit(networkPresenter);
                     move(latLng);
@@ -447,15 +439,16 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             View.OnClickListener ldLocateListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    LatLng latLng = LocationPresenter.getCurrentLatLng(getActivity());
+                    //LatLng latLng = locationPresenter.getCurrentLatLng();
+                    LatLng latLng = activity.getCurrentLatLng();
                     if(latLng == null){
                         Toast.makeText(activity,"Something wrong with GPS, Try again Later",Toast.LENGTH_LONG).show();
                         return;
                     }
-                    destinationLatLng = latLng.latitude + "," + latLng.longitude;
+                    activity.setDestinationLatLng(latLng.latitude + "," + latLng.longitude);
                     NetworkPresenter networkPresenter = new NetworkPresenter
                             (DES_REVERSE_CODE,NetworkPresenter.UrlBuilder.buildRGEO(
-                                    destinationLatLng)
+                                    activity.getDestinationLatLng())
                                     , null, handler,ResponseExtractor.BuildReverseGeoExtractor(handler));
                     activity.getExecutorService().submit(networkPresenter);
                     move(latLng);
@@ -475,6 +468,14 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
             popupWindow.setAnimationStyle(R.style.popup_style);
 
             linearLayoutManager = new LinearLayoutManager(getActivity());
+            swipeRefreshLayout = (SwipeRefreshLayout) popupView.findViewById(R.id.srl_pop);
+            swipeRefreshLayout.setColorSchemeColors(Color.CYAN,Color.GREEN,Color.BLUE);
+            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    recommendIPresenter.recommend(activity.getOriginLatLng(),activity.getDestinationLatLng());
+                }
+            });
             recyclerView = (RecyclerView) popupView.findViewById(R.id.rcv_recommend);
             recyclerView.setLayoutManager(linearLayoutManager);
         }
@@ -496,8 +497,10 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
         for(int i = 0;i < polylineOptions.getPoints().size();i ++){
             builder.include(polylineOptions.getPoints().get(i));
         }
-        LatLngBounds bounds = builder.build();
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
+        if(polylineOptions.getPoints().size() != 0) {
+            LatLngBounds bounds = builder.build();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
+        }
     }
 
     @Override
@@ -511,7 +514,6 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
     @Override
     public void onDestroyView() {
-        writeUserInfo(originLatLng,destinationLatLng,originAddress,destinationAddress);
         if(popupWindow != null) {
             popupWindow.dismiss();
         }
@@ -525,99 +527,89 @@ public class FragmentMain extends Fragment implements OnMapReadyCallback,Recomme
 
     @Override
     public void onMapInitialFinished() {
-        baseAdapter = new BaseAdapter<DestinationModel>(datas) {
-            @Override
-            public int getLayoutId(int viewType) {
-                return R.layout.dselector;
-            }
-
-            @Override
-            public void convert(final DestinationModel data, BaseAdapter.GeneralViewHolder viewHolder, final int position) {
-                viewHolder.setImageView(getActivity(),R.id.iv_dselector,data.getImageID());
-                viewHolder.setTextView(R.id.tv_selector_shopadd,data.getOrderModel().getShopAdd());
-                viewHolder.setTextView(R.id.tv_dselector_money,"$"+String.valueOf(data.getPricesEarn()[0]));
-                viewHolder.setTextView(R.id.tv_dselector_cusadd,data.getOrderModel().getTargetAdd());
-                viewHolder.setChildListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                     /*   popupWindow.dismiss();
-                        Intent intent = new Intent(getActivity(), OrderDetailActivity.class);
-                        startActivity(intent);*/
-                     Toast.makeText(getActivity(),"Server Not Reachable",Toast.LENGTH_LONG).show();
-                    }
-                },R.id.btn_detail);
-                viewHolder.setListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        LatLng origin = datas.get(position).getItem().getStart();
-                        LatLng des = datas.get(position).getItem().getEnd();
-                        NetworkPresenter networkPresenter;
-                        NetworkPresenter directPresenter;
-                        mMap.clear();
-                        if(originLatLng == null || destinationLatLng == null) {
-                            directPoly = new PolylineOptions();
-                            directPoly.color(green);
-                            directPoly.width(polyWidth);
-
-                            Extractor responseExtractor = ResponseExtractor.BuildRouteExtractor(directPoly,handler);
-                            networkPresenter = new NetworkPresenter
-                                    (ResponseExtractor.D_SUCCESS,NetworkPresenter.UrlBuilder.buildRoute(
-                                            origin.latitude + "," + origin.longitude,
-                                            des.latitude + "," + des.longitude,
-                                            "walking")
-                                            , null, handler,responseExtractor);
-                            activity.getExecutorService().submit(networkPresenter);
-                        }
-                        else{
-                            polylineOptions = new PolylineOptions();
-                            polylineOptions.color(orange);
-                            polylineOptions.width(polyWidth);
-                            directPoly = new PolylineOptions();
-                            directPoly.color(green);
-                            directPoly.width(polyWidth);
-                            networkPresenter = new NetworkPresenter (ResponseExtractor.E_SUCCESS,NetworkPresenter.UrlBuilder.buildRoute(originLatLng,
-                                 destinationLatLng,
-                                 "walking",origin.latitude + "%2C"
-                                         + origin.longitude + "%7C"+
-                                         des.latitude + "%2C" + des.longitude)
-                                 ,null,handler, ResponseExtractor.BuildRouteExtractor(polylineOptions,handler));
-                            wayPointsMarkers.get(0).position(new LatLng(origin.latitude,origin.longitude))
-                                    .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
-                            wayPointsMarkers.get(1).position(new LatLng(des.latitude,des.longitude))
-                                    .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
-                            directPresenter = new NetworkPresenter(ResponseExtractor.D_SUCCESS,
-                                    NetworkPresenter.UrlBuilder.buildRoute(
-                                            originLatLng,destinationLatLng,
-                                            "walking")
-                                    , null, handler,ResponseExtractor.BuildRouteExtractor(directPoly,handler));
-                            activity.getExecutorService().submit(networkPresenter);
-                            activity.getExecutorService().submit(directPresenter);
-                        }
-                        popupWindow.dismiss();
-                    }
-                });
-            }
-        };
-        recyclerView.setAdapter(baseAdapter);
-        recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(),linearLayoutManager.getOrientation()));
        // recyclerView.addItemDecoration(new SimpleItemDecorator(getContext(),SimpleItemDecorator.VERTICAL_LIST));
 
     }
 
-    private void writeUserInfo(String originLatLng,String destinationLatLng,String originAddress,String  destinationAddress){
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(MainActivity.shared_originLatLng,originLatLng);
-        editor.putString(MainActivity.shared_desLatLng,destinationLatLng);
-        editor.putString(MainActivity.shared_originAddress,originAddress);
-        editor.putString(MainActivity.shared_desAddress,destinationAddress);
-        editor.apply();
-    }
-    private void readUserInfo(){
-        sharedPreferences = activity.getSharedPreferences(MainActivity.shared_table,Context.MODE_PRIVATE);
-        originLatLng = sharedPreferences.getString(MainActivity.shared_originLatLng,null);
-        destinationLatLng = sharedPreferences.getString(MainActivity.shared_desLatLng,null);
-        originAddress = sharedPreferences.getString(MainActivity.shared_originAddress,null);
-        destinationAddress = sharedPreferences.getString(MainActivity.shared_desAddress,null);
+    private class RecommendAdapter extends BaseAdapter<DestinationModel>{
+
+        public RecommendAdapter(List<DestinationModel> datas){
+            this.datas = datas;
+        }
+
+        @Override
+        public int getLayoutId(int viewType) {
+            return R.layout.dselector;
+        }
+
+        @Override
+        public void convert(final DestinationModel data, BaseAdapter.GeneralViewHolder viewHolder, final int position) {
+            Glide.with(getActivity()).load(data.getImages()).into((ImageView) viewHolder.getView(R.id.iv_dselector));
+            //viewHolder.setImageView(getActivity(),R.id.iv_dselector,data.getImageID());
+            viewHolder.setTextView(R.id.tv_selector_shopadd,data.getOrderModel().getShopAdd());
+            viewHolder.setTextView(R.id.tv_dselector_money,"$"+String.valueOf(data.getPricesEarn()[0]));
+            viewHolder.setTextView(R.id.tv_dselector_cusadd,data.getOrderModel().getTargetAdd());
+            viewHolder.setChildListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    popupWindow.dismiss();
+                    Intent intent = new Intent(activity, OrderPickActivity.class);
+                    intent.putExtra(OrderDetailActivity.ORDER_AUG,data.getOrderModel());
+                    // intent.putExtra(OrderActivity.ORDER,orderModel);
+                    activity.startActivity(intent);
+                }
+            },R.id.btn_detail);
+            viewHolder.setListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    LatLng origin = datas.get(position).getItem().getStart();
+                    LatLng des = datas.get(position).getItem().getEnd();
+                    NetworkPresenter networkPresenter;
+                    NetworkPresenter directPresenter;
+                    mMap.clear();
+                    if(activity.getOriginLatLng() == null || activity.getDestinationLatLng() == null) {
+                        directPoly = new PolylineOptions();
+                        directPoly.color(green);
+                        directPoly.width(polyWidth);
+
+                        Extractor responseExtractor = ResponseExtractor.BuildRouteExtractor(directPoly,handler);
+                        networkPresenter = new NetworkPresenter
+                                (ResponseExtractor.D_SUCCESS,NetworkPresenter.UrlBuilder.buildRoute(
+                                        origin.latitude + "," + origin.longitude,
+                                        des.latitude + "," + des.longitude,
+                                        "walking")
+                                        , null, handler,responseExtractor);
+                        activity.getExecutorService().submit(networkPresenter);
+                    }
+                    else{
+                        polylineOptions = new PolylineOptions();
+                        polylineOptions.color(orange);
+                        polylineOptions.width(polyWidth);
+                        directPoly = new PolylineOptions();
+                        directPoly.color(green);
+                        directPoly.width(polyWidth);
+                        networkPresenter = new NetworkPresenter (ResponseExtractor.E_SUCCESS,NetworkPresenter.UrlBuilder.buildRoute(activity.getOriginLatLng(),
+                                activity.getDestinationLatLng(),
+                                "walking",origin.latitude + "%2C"
+                                        + origin.longitude + "%7C"+
+                                        des.latitude + "%2C" + des.longitude)
+                                ,null,handler, ResponseExtractor.BuildRouteExtractor(polylineOptions,handler));
+                        wayPointsMarkers.get(0).position(new LatLng(origin.latitude,origin.longitude))
+                                .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+                        wayPointsMarkers.get(1).position(new LatLng(des.latitude,des.longitude))
+                                .title(data.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                        directPresenter = new NetworkPresenter(ResponseExtractor.D_SUCCESS,
+                                NetworkPresenter.UrlBuilder.buildRoute(
+                                        activity.getOriginLatLng(),activity.getDestinationLatLng(),
+                                        "walking")
+                                , null, handler,ResponseExtractor.BuildRouteExtractor(directPoly,handler));
+                        activity.getExecutorService().submit(networkPresenter);
+                        activity.getExecutorService().submit(directPresenter);
+                    }
+                    popupWindow.dismiss();
+                }
+            });
+        }
     }
 }
 

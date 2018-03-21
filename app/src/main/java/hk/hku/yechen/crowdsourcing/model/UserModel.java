@@ -12,11 +12,11 @@ public class UserModel {
     private String password;
     private Date createTime;
     private double property;
-    private int credit;
+    private float credit;
     private String phone;
     private String address;
 
-    public UserModel(String userName, String email, String password, Date createTime, double property, int credit, String phone, String address) {
+    public UserModel(String userName, String email, String password, Date createTime, double property, float credit, String phone, String address) {
         this.userName = userName;
         this.email = email;
         this.password = password;
@@ -27,7 +27,7 @@ public class UserModel {
         this.address = address;
     }
 
-    public UserModel(String phone, String userName,String password,String email, int credit, double property){
+    public UserModel(String phone, String userName,String password,String email, float credit, double property){
         this.phone = phone;
         this.userName = userName;
         this.password = password;
@@ -63,7 +63,7 @@ public class UserModel {
         this.property = property;
     }
 
-    public void setCredit(int credit) {
+    public void setCredit(float credit) {
         this.credit = credit;
     }
 
@@ -95,7 +95,7 @@ public class UserModel {
         return property;
     }
 
-    public int getCredit() {
+    public float getCredit() {
         return credit;
     }
 

@@ -20,6 +20,9 @@ public class OrderModel implements Parcelable{
     private final int LIMIT = 50;
     private String customerPhone;
     private String providerPhone;
+    private String providerName;
+    private String customerName;
+    private String shopName;
     private String shopAdd;
     private String targetAdd;
     private double startLat;
@@ -31,18 +34,21 @@ public class OrderModel implements Parcelable{
     private int id;
     private double price;
     private double tips;
+    private float credit;
 
-    public static int LAUNCHED = 1;
+    public final static int LAUNCHED = 1;
 
-    public static int PICKED = 2;
+    public final static int PICKED = 2;
 
-    public static int COLLECTED = 3;
+    public final static int COLLECTED = 3;
 
-    public static int ARRIVED = 4;
+    public final static int ARRIVED = 4;
 
-    public static int FINISHED = 5;
+    public final static int FINISHED = 5;
 
     private int state = LAUNCHED;
+
+    public static final String[] stateInfo = new String[6];
 
     private HashMap<CommodityModel,Integer> commodities;
 
@@ -52,7 +58,17 @@ public class OrderModel implements Parcelable{
         if(tips > LIMIT)
             tips = LIMIT;
     }
+    static {
+        stateInfo[0] = "Order Launched.";
+        stateInfo[1] = "Order Picked.";
+        stateInfo[2] = "Order Collected.";
+        stateInfo[3] = "Order Arrived.";
+        stateInfo[4] = "Order Finished.";
+    }
 
+    public String getStateInfo(){
+        return stateInfo[state-1];
+    }
     public String getCustomerPhone() {
         return customerPhone;
     }
@@ -88,6 +104,11 @@ public class OrderModel implements Parcelable{
         this.start = new LatLng(startLat,startLng);
         this.end = new LatLng(endLat,endLng);
         this.setPrice(in.readDouble());
+        this.credit = in.readFloat();
+        this.providerName = in.readString();
+        this.customerName = in.readString();
+        this.shopName = in.readString();
+
     }
 
     public LatLng getStart(){
@@ -112,9 +133,22 @@ public class OrderModel implements Parcelable{
         this.endLng = end.longitude;
         this.targetAdd = targetAdd;
         this.shopAdd = shopAdd;
+        this.credit = 5.0f;
     }
-    public OrderModel(int id, String customerPhone,String providerPhone,HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
-                      String shopAdd,String targetAdd,double price){
+    public OrderModel(int id,
+                      String customerPhone,
+                      String providerPhone,
+                      HashMap<CommodityModel,Integer> commodities,
+                      LatLng start,
+                      LatLng end,
+                      String shopAdd,
+                      String targetAdd,
+                      double price,
+                      String providerName,
+                      String customerName,
+                      String shopName,
+                      float credit){
+
         this.id = id;
         this.commodities = commodities;
         this.customerPhone = customerPhone;
@@ -127,7 +161,17 @@ public class OrderModel implements Parcelable{
         this.endLng = end.longitude;
         this.targetAdd = targetAdd;
         this.shopAdd = shopAdd;
-        this.price = price;
+        setPrice(price);
+        this.credit = 5.0f;
+        this.customerName = customerName;
+        this.shopName = shopName;
+        if(providerPhone.equals("0")){
+            this.providerName = "Waiting for Picking.";
+        }
+        else{
+            this.providerName = providerName;
+        }
+        this.credit = credit;
     }
     public OrderModel(int id, String customerPhone,HashMap<CommodityModel,Integer> commodities, LatLng start, LatLng end,
                       String shopAdd,String targetAdd,double price){
@@ -219,6 +263,15 @@ public class OrderModel implements Parcelable{
             dest.writeInt(commodities.get(commodityModel));
         }
     }
+
+    public float getCredit() {
+        return credit;
+    }
+
+    public void setCredit(float credit) {
+        this.credit = credit;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -237,6 +290,22 @@ public class OrderModel implements Parcelable{
         dest.writeDouble(endLat);
         dest.writeDouble(endLng);
         dest.writeDouble(price);
+        dest.writeFloat(credit);
+        dest.writeString(providerName);
+        dest.writeString(customerName);
+        dest.writeString(shopName);
+    }
+
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getShopName() {
+        return shopName;
     }
 
     public void setProviderPhone(String providerPhone){

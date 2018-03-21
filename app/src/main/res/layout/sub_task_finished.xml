@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/green"
-            android:text="$11"
+            android:id="@+id/tv_task_refund"
             android:layout_toRightOf="@id/tv_f_status_1"/>
 
         <TextView
@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/green"
-            android:text="2 points"
+            android:id="@+id/tv_task_credit"
             android:layout_toRightOf="@id/tv_credit"/>
     </RelativeLayout>
 

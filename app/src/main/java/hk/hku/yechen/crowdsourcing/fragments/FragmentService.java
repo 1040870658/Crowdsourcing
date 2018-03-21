@@ -55,6 +55,7 @@ public class FragmentService extends Fragment {
     private static final int LOCATION_RETRY = 0x1000001;
     private static final  int ADV_NUM = 5;
     private List<ShopsModel> shopsModels;
+    private MainActivity activity;
     private ViewPager viewPager;
     private RecyclerView recyclerView;
     private ImageView imageView;
@@ -65,12 +66,7 @@ public class FragmentService extends Fragment {
     private HeaderBaseAdapter headerBaseAdapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<View> adViews;
-    String originLatLng;
-    String destinationLatLng;
-    String originAddress;
-    String destinationAddress;
     private String currentLatLng;
-    private LatLng latLng;
     private int offset = 1;
     private int num = COUNT;
     private static final int COUNT = 10;
@@ -103,6 +99,14 @@ public class FragmentService extends Fragment {
             "PARKnSHOP\t   6.6km\t  More than 1h",
     };
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        this.activity = (MainActivity) getActivity();
+        initAdvList(contentView);
+        initShopList(contentView);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -113,20 +117,12 @@ public class FragmentService extends Fragment {
             Glide.with(getActivity()).load(R.drawable.back_shop).into(imageView);
             progressBar = (ProgressBar) contentView.findViewById(R.id.pb_shop);
             shopHandler = new ShopHandler();
-            readUserInfo();
-            initAdvList(contentView);
-            initShopList(contentView);
         }
         return contentView;
     }
     public void initShopList(final View view){
-        latLng = LocationPresenter.getCurrentLatLng(getActivity());
-        if(latLng == null){
-            shopHandler.sendEmptyMessageDelayed(LOCATION_RETRY,1000);
-        }
-        else{
-            shopHandler.sendEmptyMessage(LOCATION_GET);
-        }
+        //latLng = locationPresenter.getCurrentLatLng();
+        currentLatLng = LocationPresenter.LatLng2String(activity.getCurrentLatLng());
    //     loadPictures();
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.srl_shop);
         swipeRefreshLayout.setColorSchemeColors(
@@ -145,7 +141,7 @@ public class FragmentService extends Fragment {
         final View.OnClickListener enterShop = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), ShopActivity.class);
+                Intent intent = new Intent(activity, ShopActivity.class);
                 startActivity(intent);
             }
         };
@@ -165,20 +161,22 @@ public class FragmentService extends Fragment {
 
         };
         headerBaseAdapter = new NormalTailorAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
         recyclerView.setAdapter(headerBaseAdapter);
-        recyclerView.addOnScrollListener(new PullRecyclerViewListener(getActivity(),shopHandler,true));
+        recyclerView.addOnScrollListener(new PullRecyclerViewListener(activity,shopHandler,true));
+        loadPictures();
     }
     private class ShopHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case NetworkPresenter.SHOP_RELOAD:
-                    ((MainActivity)getActivity()).getExecutorService().submit(
+                    activity.getExecutorService().submit(
                                     new ReloadPresenter<>(shopsModels,
                                             newDatas,
                                             shopHandler,
                                             NetworkPresenter.SHOP_SUCCESS));
+                    headerBaseAdapter.notifyDataSetChanged();
                     swipeRefreshLayout.setRefreshing(false);
                     break;
                 case PullRecyclerViewListener.SHOW_TAILER:
@@ -190,17 +188,10 @@ public class FragmentService extends Fragment {
                     progressBar.setVisibility(View.GONE);
                     headerBaseAdapter.showHeader(false);
                     headerBaseAdapter.notifyDataSetChanged();
-                    offset = num;
-                    num = num + COUNT;
-                    break;
-                case LOCATION_GET:
-                    currentLatLng = latLng.latitude+","+latLng.longitude;
-                    loadPictures();
-                    break;
-                case LOCATION_RETRY:
-                    sendEmptyMessageDelayed(LOCATION_RETRY,1000);
+                    offset++;
                     break;
                 default:
+                    progressBar.setVisibility(View.GONE);
                     swipeRefreshLayout.setRefreshing(false);
             }
         }
@@ -248,8 +239,13 @@ public class FragmentService extends Fragment {
         adHandler.sendEmptyMessage(AdHandler.ROLLING);
         viewPager.addOnPageChangeListener(new AdPageChangedListener(adHandler));
     }
+
     private void loadPictures(){
 
+        currentLatLng = LocationPresenter.LatLng2String(activity.getCurrentLatLng());
+        if(currentLatLng == null){
+            currentLatLng = activity.getOriginLatLng();
+        }
         NetworkPresenter networkPresenter  = new NetworkPresenter(
                 NetworkPresenter.SHOP_SUCCESS,
                 NetworkPresenter.UrlBuilder.buildShopList(offset,num,currentLatLng),
@@ -257,10 +253,16 @@ public class FragmentService extends Fragment {
                 shopHandler,
                 new ResponseExtractor.ShopExtractor(shopsModels,shopHandler)
         );
-        ((MainActivity)getActivity()).getExecutorService().submit(networkPresenter);
+        activity.getExecutorService().submit(networkPresenter);
     }
 
     private void reloadPictures(){
+
+        currentLatLng = LocationPresenter.LatLng2String(activity.getCurrentLatLng());
+        if(currentLatLng == null){
+            currentLatLng = activity.getOriginLatLng();
+        }
+
         newDatas = new ArrayList<>();
         NetworkPresenter networkPresenter  = new NetworkPresenter(
                 NetworkPresenter.SHOP_RELOAD,
@@ -269,11 +271,11 @@ public class FragmentService extends Fragment {
                 shopHandler,
                 new ResponseExtractor.ShopExtractor(newDatas,shopHandler)
         );
-        ((MainActivity)getActivity()).getExecutorService().submit(networkPresenter);
+        activity.getExecutorService().submit(networkPresenter);
     }
     private void loadAdv(View view,int pic){
         ImageView imageView = (ImageView) view.findViewById(R.id.iv_ad);
-        Glide.with(getActivity()).load(pic).into(imageView);
+        Glide.with(activity).load(pic).into(imageView);
         adViews.add(view);
     }
     private class ShopListener implements View.OnClickListener {
@@ -290,16 +292,15 @@ public class FragmentService extends Fragment {
         }
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(getActivity(), ShopActivity.class);
+            Intent intent = new Intent(activity, ShopActivity.class);
             intent.putExtra(ShopActivity.SHOP,shopsModel);
-            intent.putExtra(ShopActivity.CUSTOMERADD,destinationAddress);
             String[] strings = shopsModel.getAddress().split(",");
             double latD = Double.valueOf(strings[0]);
             double lngD = Double.valueOf(strings[1]);
             intent.putExtra(ShopActivity.SHOPLAT,latD);
             intent.putExtra(ShopActivity.SHOPLNG,lngD);
-            if(destinationLatLng == null) {
-                strings = destinationLatLng.split(",");
+            if(activity.getOriginLatLng() != null) {
+                strings = activity.getOriginLatLng().split(",");
                 latD = Double.valueOf(strings[0]);
                 lngD = Double.valueOf(strings[1]);
             }
@@ -309,18 +310,9 @@ public class FragmentService extends Fragment {
             }
             intent.putExtra(ShopActivity.CUSLAT,latD);
             intent.putExtra(ShopActivity.CUSLNG,lngD);
-            intent.putExtra(ShopActivity.CUSTOMERADD,originAddress);
+            intent.putExtra(ShopActivity.CUSTOMERADD,activity.getOriginAddress());
             intent.putExtra(ShopActivity.CUSID,MainActivity.userModel.getPhone());
             startActivity(intent);
         }
-    }
-    private void readUserInfo(){
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.shared_table, Context.MODE_PRIVATE);
-        if(sharedPreferences == null)
-            return;
-        originLatLng = sharedPreferences.getString(MainActivity.shared_originLatLng,null);
-        destinationLatLng = sharedPreferences.getString(MainActivity.shared_desLatLng,null);
-        originAddress = sharedPreferences.getString(MainActivity.shared_originAddress,null);
-        destinationAddress = sharedPreferences.getString(MainActivity.shared_desAddress,null);
     }
 }

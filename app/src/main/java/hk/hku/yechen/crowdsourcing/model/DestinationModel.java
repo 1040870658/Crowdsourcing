@@ -5,6 +5,11 @@ import android.os.Parcelable;
 
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.text.DecimalFormat;
+
+import hk.hku.yechen.crowdsourcing.presenter.NetworkPresenter;
+import hk.hku.yechen.crowdsourcing.util.LevelLog;
+
 /**
  * Created by yechen on 2017/11/23.
  */
@@ -40,6 +45,22 @@ public class DestinationModel implements Parcelable {
         this.name = name;
         this.images = images;
         this.imageID = imageID;
+        this.distance = distance;
+        this.orderModel = orderModel;
+        this.polylineOptions = new PolylineOptions();
+        setTimeConsuming(timeCost);
+    }
+
+    public DestinationModel(long timeCost, double pricesEarn, String name, String images,String distance, OrderModel orderModel) {
+        this.timeCost = timeCost;
+        this.pricesEarn = new double[3];
+        DecimalFormat df = new DecimalFormat("0.00");
+        this.pricesEarn[WALK] = Double.valueOf(df.format(pricesEarn));
+        this.pricesEarn[TAXI] = Double.valueOf(df.format(pricesEarn));
+        this.pricesEarn[BUS] = Double.valueOf(df.format(pricesEarn));
+
+        this.name = name;
+        this.images = "http://"+ NetworkPresenter.ip_address+"/"+images;
         this.distance = distance;
         this.orderModel = orderModel;
         this.polylineOptions = new PolylineOptions();

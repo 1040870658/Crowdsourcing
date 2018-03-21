@@ -7,6 +7,7 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -86,9 +87,18 @@ public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter.Ge
             ImageView imageView = getView(id);
             imageView.setImageDrawable(drawable);
         }
+        public void setImageView(int id,int imgID){
+            ImageView imageView = getView(id);
+            imageView.setImageResource(imgID);
+        }
         public void setImageView(Context context,int id, int imgID){
             ImageView imageView = getView(id);
             Glide.with(context).load(imgID).into(imageView);
+        }
+        public void setImageButton(Context context,int id,int imgID){
+            ImageButton imageButton = getView(id);
+            //Glide.with(context).load(imgID).into(imageButton);
+            imageButton.setImageResource(imgID);
         }
         public void setImageView(Context context,int id,String imgURL){
             ImageView imageView = getView(id);

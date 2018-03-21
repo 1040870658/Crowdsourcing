@@ -39,4 +39,5 @@
         completions."
     </string>
     <string name="title_activity_register">Register</string>
+    <string name="feedback_title">Feedback</string>
 </resources>

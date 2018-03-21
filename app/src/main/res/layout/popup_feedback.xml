@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_feedback_title"
+        android:gravity="center_horizontal"
+        android:text="@string/feedback_title"
+        android:textColor="@color/grey"
+        android:textSize="22dp"
+        android:layout_alignParentTop="true"/>
+    <RatingBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:rating="5.0"
+        android:stepSize="0.5"
+        android:layout_centerInParent="true"
+        android:id="@+id/rb_feedback"
+        android:numStars="5" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/tv_feedback_comment"
+        android:layout_alignBottom="@id/rb_feedback"
+        android:text="Perfect"
+        android:textSize="12sp"/>
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:id="@+id/btn_feedback_confirm"
+        android:text="confirm"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/white"
+        android:background="@color/orange"
+        android:layout_marginBottom="5dp"
+        android:layout_alignParentBottom="true"/>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@color/white"
+        android:id="@+id/iv_feedback"
+        android:visibility="gone"/>
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/pb_feedback"
+        android:visibility="gone"/>
+</RelativeLayout>

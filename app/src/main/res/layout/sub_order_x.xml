@@ -55,12 +55,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Jhceshop"
             android:id="@+id/tv_process_shop"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bob"
             android:layout_centerHorizontal="true"
             android:layout_marginRight="5dp"
             android:id="@+id/tv_name"/>

@@ -80,6 +80,11 @@
             android:name=".RegisterActivity"
             android:label="@string/title_activity_register">
         </activity>
+        <activity
+            android:name=".OrderPickActivity"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Holo.Light"
+            android:label="Pick"/>
     </application>
 
 </manifest>

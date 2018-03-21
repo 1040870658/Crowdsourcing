@@ -20,7 +20,7 @@ public class PullRecyclerViewListener extends RecyclerView.OnScrollListener {
     public static final int SHOW_TAILER = 0x11000002;
     private Context context;
     private Handler handler;
-    public static int page = 1;
+    public  int page = 1;
 
     private final boolean pauseOnScroll;
 

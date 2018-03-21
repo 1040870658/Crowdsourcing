@@ -44,14 +44,17 @@ public class NetworkPresenter implements Runnable{
     //  private static String DESTINATION = "22.2831928,114.1381175";
     private static String BEGIN = "22.313297,114.170546";
     private static String DESTINATION = "22.283208,114.138175";
-    public static String ip_address = "147.8.102.173:8080";
+    public static String ip_address = "147.8.5.121:8080";
     public static final String LOGIN = "http://"+ip_address+"/user/login?";
     public static final String REGISTER = "http://"+ip_address+"/user/register?";
+    public static final String UPDATE_STATUS = "http://"+ip_address+"/order/updateOrder?";
+    public static final String CONFIRM_ORDER = "http://"+ip_address+"/order/confirmOrder?";
     public static final String RGEO_SEARCH = "https://maps.googleapis.com/maps/api/geocode/json?";
     public static final String ROUTE_SEARCH = "https://maps.googleapis.com/maps/api/directions/json?";
     public static final String SHOP_LIST = "http://"+ip_address+"/shop/list?";
     public static final String COMMODITY_IN_SHOP = "http://"+ip_address+"/commodity/singleshop?";
     public static final String ORDERS_LOOKUP = "http://"+ip_address+"/order/lookup?";
+    public static final String RECOMMEND_ORDER = "http://"+ip_address+"/order/recommendOrder?";
     //        "origin=22.283257,114.136774&destination=22.2831928,114.1381175&sensor=true&mode=walking&key=AIzaSyCN8pCyzbH7sNTHpaeEA7Rg48nt49WoUOU";
     public static final String NEARBY_SEARCH =
             "https://maps.googleapis.com/maps/api/place/nearbysearch/json" +
@@ -91,6 +94,7 @@ public class NetworkPresenter implements Runnable{
         this.handler = handler;
     }
     public static class UrlBuilder{
+
         public static String buildRoute(String origin,String destination){
             String url = ROUTE_SEARCH + "origin=" +origin+"&destination=" + destination;
             return url + "&key=AIzaSyCN8pCyzbH7sNTHpaeEA7Rg48nt49WoUOU";
@@ -117,6 +121,13 @@ public class NetworkPresenter implements Runnable{
             return LOGIN + "userId="+phone+"&password="+password;
         }
 
+        public static String buildUpdateStatus(long orderId,int status,String userPhone){
+            return UPDATE_STATUS+"orderId="+orderId+"&status="+status+"&providerId="+userPhone;
+        }
+
+        public static String buildConfirmOrder(long orderId,int status,String phone,float credit){
+            return CONFIRM_ORDER+"orderId="+orderId+"&status="+status+"&providerId="+phone+"&credit="+credit;
+        }
         public static String buildOrderLaunch(String customerPhone,
                                               HashMap<CommodityModel,Integer> commMap,
                                               String destination,
@@ -158,6 +169,9 @@ public class NetworkPresenter implements Runnable{
             return COMMODITY_IN_SHOP+"shopId="+shopId+"&offset="+offset+"&count="+count;
         }
 
+        public static String buildRecommend(String src,String des){
+            return RECOMMEND_ORDER+"src="+src+"&des="+des;
+        }
         public static String buildOrdersLookup(String phone,int type){
             if (type != 0 && type != 1)
                 type = 0;
@@ -191,6 +205,8 @@ public class NetworkPresenter implements Runnable{
 
     @Override
     public void run() {
+
+        LevelLog.log(LevelLog.ERROR,"url",url);
         network.asynRequest(url, new NetworkEngine.Listener() {
             @Override
             public void onFailure(Call call, IOException e) {

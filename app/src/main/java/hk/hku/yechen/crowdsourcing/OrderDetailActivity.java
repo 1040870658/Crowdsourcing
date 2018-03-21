@@ -11,6 +11,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.squareup.haha.perflib.Main;
+
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,16 +29,19 @@ import hk.hku.yechen.crowdsourcing.model.OrderModel;
 
 public class OrderDetailActivity extends Activity {
     public static final String ORDER_AUG = "OrderDetail";
-    private TextView addressText;
-    private String address= "";
-    private Button backButton;
-    private OrderModel orderModel;
-    private List<CommodityModel> description;
-    private TextView shopAddressView;
-    private TextView tipText;
-    private TextView totalText;
-    private TextView priceText;
-    private RecyclerView recyclerView;
+    protected TextView addressText;
+    protected String address= "";
+    protected Button backButton;
+    protected OrderModel orderModel;
+    protected List<CommodityModel> description;
+    protected TextView shopAddressView;
+    protected TextView tipText;
+    protected TextView totalText;
+    protected TextView priceText;
+    protected TextView phoneText;
+    protected TextView nameText;
+    protected RecyclerView recyclerView;
+    protected String name;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +55,8 @@ public class OrderDetailActivity extends Activity {
         priceText = (TextView) findViewById(R.id.tv_order_confirm_price);
         recyclerView = (RecyclerView) findViewById(R.id.rcv_order_confirm);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        nameText = (TextView) findViewById(R.id.tv_order_confirm_name);
+        phoneText = (TextView) findViewById(R.id.tv_order_confirm_tel);
         backButton.setOnClickListener(new View.OnClickListener(){
 
             @Override
@@ -95,7 +103,8 @@ public class OrderDetailActivity extends Activity {
     public void GoBack(View view){
         finish();
     }
-    private class PickListener implements View.OnClickListener{
+
+    protected class PickListener implements View.OnClickListener{
 
         @Override
         public void onClick(View v) {
@@ -105,12 +114,14 @@ public class OrderDetailActivity extends Activity {
             finish();
         }
     }
-    private void getDataFromShop(){
+
+    protected void getDataFromShop(){
         Intent intent = getIntent();
         if(intent == null) {
             return;
         }
-        orderModel = getIntent().getParcelableExtra(ORDER_AUG);
+        orderModel = intent.getParcelableExtra(ORDER_AUG);
+
         if(orderModel != null){
             shopAddressView.setText(orderModel.getShopAdd());
             addressText.setText(orderModel.getTargetAdd());
@@ -121,9 +132,15 @@ public class OrderDetailActivity extends Activity {
                 tmp = entry.getKey();
                 description.add(tmp);
             }
-            priceText.setText("$"+orderModel.getPrice());
-            tipText.setText("$"+orderModel.getTips());
-            totalText.setText("$"+ (orderModel.getPrice()+orderModel.getTips()));
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            String value = decimalFormat.format(orderModel.getPrice());
+            priceText.setText(String.valueOf("$ "+value));
+            value = decimalFormat.format(orderModel.getTips());
+            tipText.setText(String.valueOf("$ "+value));
+            String total = decimalFormat.format(orderModel.getPrice() + orderModel.getTips());
+            totalText.setText(String.valueOf("$ "+ total));
+            phoneText.setText(orderModel.getCustomerPhone());
+            nameText.setText(orderModel.getCustomerName());
         }
     }
 }
